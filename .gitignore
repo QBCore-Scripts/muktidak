@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# live database and private uploads — never commit
+/data/*.db
+/data/*.db-*
+/data/uploads/
+/data/.admin-password
+
+# uploaded media
+/public/uploads/*
+!/public/uploads/.gitkeep

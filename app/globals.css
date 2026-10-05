@@ -1,26 +1,295 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --forest: #114236;
+  --forest-deep: #0c3228;
+  --leaf: #1b7a4d;
+  --moss: #e8f3ec;
+  --cream: #f6f3ee;
+  --paper: #fffdfb;
+  --ink: #1a2420;
+  --muted: #5c6a63;
+  --line: #e6dfd4;
+  --donate: #c5342c;
+  --warn: #fdecea;
+  --background: var(--cream);
+  --foreground: var(--ink);
 }
 
 @theme inline {
+  --color-forest: var(--forest);
+  --color-forest-deep: var(--forest-deep);
+  --color-leaf: var(--leaf);
+  --color-moss: var(--moss);
+  --color-cream: var(--cream);
+  --color-paper: var(--paper);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-donate: var(--donate);
+  --color-warn: var(--warn);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-bangla), "Noto Sans Bengali", sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: #cfe6d8;
+}
+
+.field {
+  width: 100%;
+  border-radius: 0.65rem;
+  border: 1px solid var(--line);
+  background: white;
+  padding: 0.65rem 0.8rem;
+  font: inherit;
+  color: var(--ink);
+}
+
+.field:focus {
+  outline: none;
+  border-color: var(--leaf);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--leaf) 25%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--leaf);
+  outline-offset: 2px;
+}
+
+.panel {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.panel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/history/speech.jpg");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+.panel:nth-child(3n + 2)::before {
+  background-image: url("/history/fighters.jpg");
+}
+
+.panel:nth-child(3n)::before {
+  background-image: url("/history/victory.jpg");
+}
+
+.panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+.panel-forest::before {
+  opacity: 0.2;
+}
+
+.admin-canvas {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--leaf) 14%, transparent), transparent 28%),
+    var(--cream);
+}
+
+.admin-canvas::before,
+.admin-canvas::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  z-index: 0;
+  height: 100%;
+  width: min(46%, 32rem);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.2;
+  pointer-events: none;
+}
+
+.admin-canvas::before {
+  left: 0;
+  background-image: url("/history/fighters.jpg");
+  border-bottom-right-radius: 8rem;
+  -webkit-mask-image: linear-gradient(90deg, #000 6%, transparent 86%);
+  mask-image: linear-gradient(90deg, #000 6%, transparent 86%);
+}
+
+.admin-canvas::after {
+  right: 0;
+  background-image: url("/history/speech.jpg");
+  border-bottom-left-radius: 8rem;
+  -webkit-mask-image: linear-gradient(270deg, #000 6%, transparent 86%);
+  mask-image: linear-gradient(270deg, #000 6%, transparent 86%);
+}
+
+.admin-bar,
+.admin-main,
+.admin-menu {
+  position: relative;
+  z-index: 1;
+}
+
+.admin-main :is(article, section, form, table).bg-paper,
+.admin-main .bg-paper {
+  background-color: color-mix(in srgb, white 94%, transparent);
+}
+
+.login-stage {
+  background: #fff;
+}
+
+.login-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(255, 255, 255, 0.96) 0 18%, rgba(255, 255, 255, 0.82) 46%, rgba(255, 255, 255, 0.62) 100%),
+    url("/history/speech.jpg") center / cover no-repeat;
+}
+
+.login-wash {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  width: min(46vw, 34rem);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+.login-wash-left {
+  left: 0;
+  background-position: left center;
+  border-radius: 0 46% 46% 0;
+  -webkit-mask-image: linear-gradient(90deg, #000 28%, transparent 92%);
+  mask-image: linear-gradient(90deg, #000 28%, transparent 92%);
+}
+
+.login-wash-right {
+  right: 0;
+  background-position: right center;
+  border-radius: 46% 0 0 46%;
+  -webkit-mask-image: linear-gradient(270deg, #000 28%, transparent 92%);
+  mask-image: linear-gradient(270deg, #000 28%, transparent 92%);
+}
+
+.login-ring {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  height: 38rem;
+  width: 38rem;
+  translate: -50% -50%;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--forest) 10%, transparent);
+  pointer-events: none;
+}
+
+.login-ring-inner {
+  position: absolute;
+  inset: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--donate) 16%, transparent);
+}
+
+.admin-main h1 {
+  letter-spacing: -0.03em;
+}
+
+.side-photo {
+  position: absolute;
+  top: 0;
+  z-index: 0;
+  height: 100%;
+  width: min(42vw, 13rem);
+  background-size: cover;
+  pointer-events: none;
+}
+
+.side-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.side-photo-left {
+  left: 0;
+  background-position: left center;
+  border-bottom-right-radius: 6.5rem;
+  opacity: 0.58;
+  -webkit-mask-image: linear-gradient(90deg, #000 8%, transparent 82%);
+  mask-image: linear-gradient(90deg, #000 8%, transparent 82%);
+}
+
+.side-photo-left::after {
+  background: linear-gradient(90deg, transparent 28%, var(--forest) 100%);
+}
+
+.side-photo-right {
+  right: 0;
+  background-position: right center;
+  border-bottom-left-radius: 6.5rem;
+  opacity: 0.58;
+  -webkit-mask-image: linear-gradient(270deg, #000 8%, transparent 82%);
+  mask-image: linear-gradient(270deg, #000 8%, transparent 82%);
+}
+
+.side-photo-right::after {
+  background: linear-gradient(270deg, transparent 28%, var(--forest) 100%);
+}
+
+.side-photo-deep.side-photo-left,
+.side-photo-deep.side-photo-right {
+  width: min(48vw, 18rem);
+  height: 16rem;
+  opacity: 0.55;
+}
+
+.side-photo-deep.side-photo-left {
+  border-bottom-right-radius: 8rem;
+}
+
+.side-photo-deep.side-photo-right {
+  border-bottom-left-radius: 8rem;
+}
+
+.side-photo-deep.side-photo-left::after {
+  background: linear-gradient(90deg, transparent 22%, var(--forest-deep) 100%);
+}
+
+.side-photo-deep.side-photo-right::after {
+  background: linear-gradient(270deg, transparent 22%, var(--forest-deep) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
