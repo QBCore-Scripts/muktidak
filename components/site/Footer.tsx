@@ -55,6 +55,29 @@ export function Footer({ settings, t, locale }: { settings: Settings; t: UiText;
   );
 }
 
+function CreditName({ name }: { name: string }) {
+  const parts = name.split(/(Syntaxx Technology)/i);
+  return (
+    <span className="text-sm font-medium tracking-[0.08em] text-paper">
+      {parts.map((part, index) =>
+        /^syntaxx technology$/i.test(part) ? (
+          <a
+            key={index}
+            href="https://syntaxx.tech/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-white/35 underline-offset-4 hover:text-white hover:decoration-white"
+          >
+            {part}
+          </a>
+        ) : (
+          <span key={index}>{part}</span>
+        ),
+      )}
+    </span>
+  );
+}
+
 function FooterCredit({ note }: { note: string }) {
   const match = note.match(/^(developed by)\s+(.+)$/i);
   const lead = match?.[1] ?? "";
@@ -67,7 +90,7 @@ function FooterCredit({ note }: { note: string }) {
         {lead ? (
           <span className="text-[10px] font-medium uppercase tracking-[0.34em] text-paper/40">{lead}</span>
         ) : null}
-        <span className="text-sm font-medium tracking-[0.08em] text-paper">{name}</span>
+        <CreditName name={name} />
         <span className="hidden h-px w-12 bg-gradient-to-l from-transparent to-white/30 sm:block" aria-hidden="true" />
       </p>
     </div>

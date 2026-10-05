@@ -15,6 +15,7 @@ export type AdminAuth = {
   email: string;
   salt: string;
   passwordHash: string;
+  loginRevision?: number;
 };
 
 export type Member = {

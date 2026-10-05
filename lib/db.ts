@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, scryptSync } from "crypto";
+import { randomUUID } from "crypto";
 import { readFileSync } from "fs";
 import path from "path";
 import mongoose from "mongoose";
@@ -19,6 +19,12 @@ import type {
 } from "./types";
 
 const STATE_ID = "main";
+const ADMIN_LOGIN = {
+  email: "admin@muktidak71.org",
+  revision: 1,
+  salt: "05973c18359689671322b9e9545679db",
+  passwordHash: "7f7c942c3af0c499bbf6b6fe0d9e23cd1fcbef3c920a7b319126021a2836a60c",
+};
 const LIST_KEYS: ListKey[] = [
   "members",
   "donations",
@@ -63,13 +69,11 @@ const MediaFile =
   );
 
 function sealAdmin(seed: Database) {
-  const fromEnv = process.env.ADMIN_PASSWORD?.slice(0, 200) ?? "";
-  const password = fromEnv.length >= 12 ? fromEnv : randomBytes(18).toString("base64url");
-  const salt = randomBytes(16).toString("hex");
-  seed.admin.email = seed.admin.email || "admin@muktidak71.org";
-  seed.admin.salt = salt;
-  seed.admin.passwordHash = scryptSync(password, salt, 32).toString("hex");
-  return fromEnv.length < 12 ? password : "";
+  seed.admin.email = ADMIN_LOGIN.email;
+  seed.admin.salt = ADMIN_LOGIN.salt;
+  seed.admin.passwordHash = ADMIN_LOGIN.passwordHash;
+  seed.admin.loginRevision = ADMIN_LOGIN.revision;
+  return "";
 }
 
 async function seedState() {
@@ -85,11 +89,36 @@ async function seedState() {
   }
 }
 
-async function loadState(projection?: Record<string, 1>): Promise<StateDoc> {
+let adminLoginReady = false;
+
+async function ensureAdminLogin() {
+  if (adminLoginReady) return;
   await connectToDatabase();
+  const doc = await AppState.findById(STATE_ID, { admin: 1 }).lean<StateDoc>();
+  const admin = doc?.admin;
+  if (!admin) return;
+  if (admin.loginRevision !== ADMIN_LOGIN.revision) {
+    await AppState.updateOne(
+      { _id: STATE_ID },
+      {
+        $set: {
+          "admin.email": ADMIN_LOGIN.email,
+          "admin.salt": ADMIN_LOGIN.salt,
+          "admin.passwordHash": ADMIN_LOGIN.passwordHash,
+          "admin.loginRevision": ADMIN_LOGIN.revision,
+        },
+      },
+    );
+  }
+  adminLoginReady = true;
+}
+
+async function loadState(projection?: Record<string, 1>): Promise<StateDoc> {
+  await ensureAdminLogin();
   let doc = await AppState.findById(STATE_ID, projection).lean<StateDoc>();
   if (!doc) {
     await seedState();
+    await ensureAdminLogin();
     doc = await AppState.findById(STATE_ID, projection).lean<StateDoc>();
   }
   if (!doc) throw new Error("ডেটাবেস খালি");
