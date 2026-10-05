@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { getSettings } from "@/lib/db";
+import { getSite } from "@/lib/locale";
 import { Reveal } from "./Reveal";
 
 export async function PageHeader({
@@ -12,7 +12,7 @@ export async function PageHeader({
   title: string;
   text?: string;
 }) {
-  const flavor = (await getSettings()).copy.flavorLine;
+  const flavor = (await getSite()).settings.copy.flavorLine;
   return (
     <header className="border-b border-line bg-paper">
       <div className="mx-auto max-w-6xl px-4 py-12 md:py-16">

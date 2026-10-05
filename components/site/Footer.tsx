@@ -1,9 +1,10 @@
 import Link from "next/link";
+import type { Locale, UiText } from "@/lib/i18n";
 import type { Settings } from "@/lib/types";
-import { siteNameEn } from "@/lib/seo";
+import { siteNameBn, siteNameEn } from "@/lib/seo";
 import { Mark } from "./Mark";
 
-export function Footer({ settings }: { settings: Settings }) {
+export function Footer({ settings, t, locale }: { settings: Settings; t: UiText; locale: Locale }) {
   return (
     <footer className="mt-16 text-paper">
       <svg viewBox="0 0 1440 28" preserveAspectRatio="none" className="block h-5 w-full text-forest-deep" aria-hidden="true">
@@ -23,13 +24,13 @@ export function Footer({ settings }: { settings: Settings }) {
               <Mark className="h-9 w-9" />
               <span>
                 <p className="font-heading text-lg">{settings.shortName}</p>
-                <p className="text-[11px] tracking-[0.12em] text-paper/55">{siteNameEn}</p>
+                <p className="text-[11px] tracking-[0.12em] text-paper/55">{locale === "en" ? siteNameBn : siteNameEn}</p>
               </span>
             </div>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-paper/75">{settings.tagline}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold tracking-wide text-paper/50">পাতা</p>
+            <p className="text-xs font-semibold tracking-wide text-paper/50">{t.footerPages}</p>
             <ul className="mt-4 grid gap-2.5 text-sm text-paper/85">
               <li><Link href="/about" className="hover:text-white">{settings.copy.navAbout}</Link></li>
               <li><Link href="/activities" className="hover:text-white">{settings.copy.navActivities}</Link></li>
@@ -39,7 +40,7 @@ export function Footer({ settings }: { settings: Settings }) {
             </ul>
           </div>
           <div>
-            <p className="text-xs font-semibold tracking-wide text-paper/50">যোগাযোগ</p>
+            <p className="text-xs font-semibold tracking-wide text-paper/50">{t.footerContact}</p>
             <ul className="mt-4 grid gap-2.5 text-sm text-paper/85">
               <li>{settings.address}</li>
               <li><a href={`tel:${settings.phone}`} className="hover:text-white">{settings.phone}</a></li>

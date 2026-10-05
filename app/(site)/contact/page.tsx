@@ -1,22 +1,20 @@
-import type { Metadata } from "next";
 import { ContactForm } from "@/components/site/ContactForm";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { getSettings } from "@/lib/db";
+import { getSite, localizedMeta } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "যোগাযোগ",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর সাথে যোগাযোগ।",
-};
+export function generateMetadata() {
+  return localizedMeta("contact");
+}
 
 export default async function ContactPage() {
-  const settings = await getSettings();
+  const { locale, t, settings } = await getSite();
   const rows = [
-    ["ঠিকানা", settings.address, ""],
-    ["ফোন", settings.phone, `tel:${settings.phone}`],
-    ["ইমেইল", settings.email, `mailto:${settings.email}`],
+    [t.address, settings.address, ""],
+    [t.phone, settings.phone, `tel:${settings.phone}`],
+    [t.email, settings.email, `mailto:${settings.email}`],
   ].filter(([, value]) => value);
 
   return (
@@ -44,7 +42,7 @@ export default async function ContactPage() {
           </Card>
         </Reveal>
         <Reveal variant="right" index={1}>
-          <ContactForm />
+          <ContactForm t={t} locale={locale} />
         </Reveal>
       </div>
     </>

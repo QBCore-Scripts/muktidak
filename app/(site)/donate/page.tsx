@@ -1,15 +1,15 @@
-import type { Metadata } from "next";
 import { AccountCards } from "@/components/site/AccountCards";
 import { PageHeader } from "@/components/site/PageHeader";
-import { getSettings, getVisibleAccounts } from "@/lib/db";
+import { getVisibleAccounts } from "@/lib/db";
+import { getSite, localizedMeta } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "দান",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর খোলা দান হিসাব।",
-};
+export function generateMetadata() {
+  return localizedMeta("donate");
+}
 
 export default async function DonatePage() {
-  const copy = (await getSettings()).copy;
+  const { t, settings } = await getSite();
+  const copy = settings.copy;
   const accounts = await getVisibleAccounts();
 
   return (
@@ -20,7 +20,7 @@ export default async function DonatePage() {
         text={copy.donateText}
       />
       <div className="mx-auto max-w-6xl px-4 py-10">
-        <AccountCards accounts={accounts} />
+        <AccountCards accounts={accounts} t={t} />
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-muted">
           {copy.donateNote}
         </p>

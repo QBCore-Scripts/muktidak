@@ -11,7 +11,9 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Separator } from "@/components/ui/separator";
 import { visionCards } from "@/lib/copy";
 import { pageBySlug, paragraphs } from "@/lib/content";
-import { getActivities, getPublishedBlogs, getPublishedNotices, getSettings, publicCounts } from "@/lib/db";
+import { getActivities, getPublishedBlogs, getPublishedNotices, publicCounts } from "@/lib/db";
+import { pad2 } from "@/lib/i18n";
+import { getSite } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 
 const tiles = [
@@ -22,10 +24,8 @@ const tiles = [
 
 const heroVideo = "Wh0q8vdH-ro";
 
-const bn2 = new Intl.NumberFormat("bn-BD", { minimumIntegerDigits: 2 });
-
 export default async function HomePage() {
-  const settings = await getSettings();
+  const { locale, t, settings } = await getSite();
   const copy = settings.copy;
   const counts = await publicCounts();
   const activities = await getActivities();
@@ -35,9 +35,9 @@ export default async function HomePage() {
   const points = visionCards(copy.visionPoints).slice(0, 3);
   const [lead, rest] = paragraphs(home.body);
   const stats = [
-    { value: counts.donationTotal, prefix: "৳", label: "গৃহীত দান" },
-    { value: counts.activeMembers, prefix: "", label: "সক্রিয় সদস্য" },
-    { value: counts.districtCount, prefix: "", label: "জেলা দপ্তর" },
+    { value: counts.donationTotal, prefix: "৳", label: t.statDonations },
+    { value: counts.activeMembers, prefix: "", label: t.statMembers },
+    { value: counts.districtCount, prefix: "", label: t.statDistricts },
   ];
 
   return (
@@ -47,7 +47,7 @@ export default async function HomePage() {
         <div className="hero-video absolute inset-0 -z-30" aria-hidden="true">
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${heroVideo}?autoplay=1&mute=1&loop=1&playlist=${heroVideo}&controls=0&playsinline=1&rel=0&disablekb=1&iv_load_policy=3&fs=0`}
-            title="ব্যাকগ্রাউন্ড ভিডিও"
+            title={t.heroVideo}
             allow="autoplay; encrypted-media; picture-in-picture"
             referrerPolicy="strict-origin-when-cross-origin"
             tabIndex={-1}
@@ -90,20 +90,6 @@ export default async function HomePage() {
               </Link>
             </Reveal>
           </div>
-
-          <Reveal as="aside" variant="right" index={3} className="max-w-xl lg:mb-2">
-            <Card className="glass gap-0 rounded-3xl bg-white/10 py-6 text-white ring-0">
-              <CardHeader className="px-6">
-                <CardDescription className="text-white/60">{copy.quoteLabel}</CardDescription>
-              </CardHeader>
-              <CardContent className="px-6 pt-3">
-                <p className="font-heading text-2xl leading-snug md:text-3xl">“{settings.quote}”</p>
-              </CardContent>
-              <CardFooter className="mt-5 border-white/15 bg-transparent px-6 pb-0 pt-4 text-sm text-white/70">
-                — {settings.shortName}
-              </CardFooter>
-            </Card>
-          </Reveal>
         </div>
       </section>
 
@@ -119,7 +105,7 @@ export default async function HomePage() {
             >
               <p className={cn("text-sm", index === 0 ? "text-white/80" : "text-muted-foreground")}>{label}</p>
               <p className={cn("text-4xl font-semibold", index === 0 ? "text-white" : "text-forest")}>
-                <CountUp value={value} prefix={prefix} />
+                <CountUp value={value} prefix={prefix} locale={locale} />
               </p>
             </Card>
           ))}
@@ -158,7 +144,7 @@ export default async function HomePage() {
                   <CardHeader>
                     <CardTitle className="text-xl text-forest">{item.title}</CardTitle>
                     <CardAction>
-                      <span className="text-sm text-forest/30 tabular-nums">{bn2.format(index + 1)}</span>
+                      <span className="text-sm text-forest/30 tabular-nums">{pad2(index + 1, locale)}</span>
                     </CardAction>
                   </CardHeader>
                   <CardContent>
@@ -186,10 +172,10 @@ export default async function HomePage() {
               </CardAction>
             </CardHeader>
             <CardContent className="grid gap-3 px-4 md:px-5">
-              {notices.length === 0 ? <p className="rounded-xl bg-white px-5 py-6 text-sm text-muted-foreground">এখনো কোনো নোটিশ নেই।</p> : null}
+              {notices.length === 0 ? <p className="rounded-xl bg-white px-5 py-6 text-sm text-muted-foreground">{t.noNotices}</p> : null}
               {notices.map((item, index) => (
                 <Reveal key={item.id} index={index}>
-                  <NoticeRow notice={item} />
+                  <NoticeRow notice={item} locale={locale} />
                 </Reveal>
               ))}
             </CardContent>
@@ -217,7 +203,7 @@ export default async function HomePage() {
           <div className="grid gap-5 md:grid-cols-3">
             {blogs.map((item, index) => (
               <Reveal key={item.id} index={index}>
-                <BlogCard post={item} index={index} />
+                <BlogCard post={item} index={index} locale={locale} />
               </Reveal>
             ))}
           </div>

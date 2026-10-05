@@ -1,19 +1,20 @@
-import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { getDistricts, getSettings } from "@/lib/db";
+import { getDistricts } from "@/lib/db";
+import { intlLocale } from "@/lib/i18n";
+import { getSite, localizedMeta } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = {
-  title: "জেলা ও দপ্তর",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর জেলা দপ্তর।",
-};
+export function generateMetadata() {
+  return localizedMeta("districts");
+}
 
 export default async function DistrictsPage() {
-  const copy = (await getSettings()).copy;
+  const { locale, t, settings } = await getSite();
+  const copy = settings.copy;
   const districts = await getDistricts();
 
   return (
@@ -27,7 +28,7 @@ export default async function DistrictsPage() {
                 <CardTitle className="text-2xl text-forest">{item.name}</CardTitle>
                 {item.office ? <CardDescription>{item.office}</CardDescription> : null}
                 <CardAction>
-                  <Badge variant="secondary">{new Intl.NumberFormat("bn-BD").format(item.members)} সদস্য</Badge>
+                  <Badge variant="secondary">{new Intl.NumberFormat(intlLocale(locale)).format(item.members)} {t.members}</Badge>
                 </CardAction>
               </CardHeader>
               <CardFooter className="mt-auto justify-between gap-3 bg-paper">

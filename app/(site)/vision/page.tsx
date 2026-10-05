@@ -1,15 +1,14 @@
-import type { Metadata } from "next";
 import Image from "next/image";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { visionCards } from "@/lib/copy";
 import { pageBySlug, paragraphs } from "@/lib/content";
-import { getSettings } from "@/lib/db";
+import { pad2 } from "@/lib/i18n";
+import { getSite, localizedMeta } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "ভিশন",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) — মাঠের রাজনীতির ভিশন।",
-};
+export function generateMetadata() {
+  return localizedMeta("vision");
+}
 
 const tiles = [
   { src: "/history/speech.jpg", tint: "tile-blue" },
@@ -20,7 +19,8 @@ const tiles = [
 export default async function VisionPage() {
   const page = await pageBySlug("vision");
   const parts = paragraphs(page.body);
-  const copy = (await getSettings()).copy;
+  const { locale, settings } = await getSite();
+  const copy = settings.copy;
   const points = visionCards(copy.visionPoints);
 
   return (
@@ -38,7 +38,7 @@ export default async function VisionPage() {
             return (
               <Reveal key={title} as="li" variant="zoom" index={index} className={`tile tile-deep lift group flex flex-col justify-end p-6 ${tile.tint}`}>
                 <Image src={tile.src} alt="" fill sizes="(min-width: 768px) 33vw, 100vw" />
-                <p className="text-sm text-white/75">{new Intl.NumberFormat("bn-BD", { minimumIntegerDigits: 2 }).format(index + 1)}</p>
+                <p className="text-sm text-white/75">{pad2(index + 1, locale)}</p>
                 <h2 className="mt-1 text-3xl">{title}</h2>
                 <p className="mt-2 text-sm leading-relaxed text-white/85">{text}</p>
               </Reveal>

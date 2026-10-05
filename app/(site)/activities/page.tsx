@@ -1,22 +1,21 @@
-import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { pageBySlug, paragraphs } from "@/lib/content";
-import { getActivities, getSettings } from "@/lib/db";
+import { getActivities } from "@/lib/db";
+import { pad2 } from "@/lib/i18n";
+import { getSite, localizedMeta } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "কার্যক্রম",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর মাঠের কার্যক্রম।",
-};
-
-const bn2 = new Intl.NumberFormat("bn-BD", { minimumIntegerDigits: 2 });
+export function generateMetadata() {
+  return localizedMeta("activities");
+}
 
 export default async function ActivitiesPage() {
   const page = await pageBySlug("activities");
   const intro = paragraphs(page.body)[0];
-  const copy = (await getSettings()).copy;
+  const { locale, settings } = await getSite();
+  const copy = settings.copy;
   const activities = await getActivities();
 
   return (
@@ -30,7 +29,7 @@ export default async function ActivitiesPage() {
                 {item.date ? <Badge variant="outline" className="border-leaf/30 text-leaf">{item.date}</Badge> : null}
                 <CardTitle className="mt-2 text-3xl text-forest">{item.title}</CardTitle>
                 <CardAction>
-                  <span className="font-heading text-5xl leading-none text-forest/10">{bn2.format(index + 1)}</span>
+                  <span className="font-heading text-5xl leading-none text-forest/10">{pad2(index + 1, locale)}</span>
                 </CardAction>
               </CardHeader>
               <CardContent>

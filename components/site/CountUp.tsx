@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { intlLocale, type Locale } from "@/lib/i18n";
 
-const bn = new Intl.NumberFormat("bn-BD");
-
-export function CountUp({ value, prefix = "" }: { value: number; prefix?: string }) {
+export function CountUp({ value, prefix = "", locale }: { value: number; prefix?: string; locale: Locale }) {
   const ref = useRef<HTMLSpanElement>(null);
   const [shown, setShown] = useState(value);
 
@@ -34,7 +33,7 @@ export function CountUp({ value, prefix = "" }: { value: number; prefix?: string
   return (
     <span ref={ref} className="tabular-nums">
       {prefix}
-      {bn.format(shown)}
+      {new Intl.NumberFormat(intlLocale(locale)).format(shown)}
     </span>
   );
 }

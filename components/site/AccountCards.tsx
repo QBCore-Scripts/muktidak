@@ -5,10 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { UiText } from "@/lib/i18n";
 import type { BankAccount } from "@/lib/types";
 import { Reveal } from "./Reveal";
 
-export function AccountCards({ accounts }: { accounts: BankAccount[] }) {
+export function AccountCards({ accounts, t }: { accounts: BankAccount[]; t: UiText }) {
   const [copied, setCopied] = useState("");
 
   async function copy(number: string) {
@@ -17,7 +18,7 @@ export function AccountCards({ accounts }: { accounts: BankAccount[] }) {
   }
 
   if (accounts.length === 0) {
-    return <p className="text-muted-foreground">এখন কোনো অ্যাকাউন্ট দান পাতায় খোলা নেই।</p>;
+    return <p className="text-muted-foreground">{t.noAccounts}</p>;
   }
 
   return (
@@ -36,11 +37,11 @@ export function AccountCards({ accounts }: { accounts: BankAccount[] }) {
               <Separator className="mb-4" />
               <dl className="grid gap-3 text-sm">
                 <div className="flex justify-between gap-4">
-                  <dt className="text-muted-foreground">নাম</dt>
+                  <dt className="text-muted-foreground">{t.accountName}</dt>
                   <dd className="text-right font-medium">{account.accountName}</dd>
                 </div>
                 <div className="flex items-center justify-between gap-4">
-                  <dt className="text-muted-foreground">নম্বর</dt>
+                  <dt className="text-muted-foreground">{t.accountNumber}</dt>
                   <dd className="font-mono text-base font-medium tracking-wider">{account.accountNumber}</dd>
                 </div>
               </dl>
@@ -52,7 +53,7 @@ export function AccountCards({ accounts }: { accounts: BankAccount[] }) {
                 className="rounded-full px-4"
                 onClick={() => copy(account.accountNumber)}
               >
-                {copied === account.accountNumber ? "কপি হয়েছে" : "নম্বর কপি করুন"}
+                {copied === account.accountNumber ? t.copied : t.copyNumber}
               </Button>
             </CardFooter>
           </Card>

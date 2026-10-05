@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/format";
+import { uiText, type Locale } from "@/lib/i18n";
 import type { BlogPost } from "@/lib/types";
 
 const fallbacks = [
@@ -10,7 +11,7 @@ const fallbacks = [
   { src: "/history/victory.jpg", tint: "tile-red" },
 ];
 
-export function BlogCard({ post, index = 0 }: { post: BlogPost; index?: number }) {
+export function BlogCard({ post, index = 0, locale }: { post: BlogPost; index?: number; locale: Locale }) {
   const fallback = fallbacks[index % fallbacks.length];
   return (
     <Link href={`/blogs/${post.slug}`} className="group block h-full rounded-xl">
@@ -21,7 +22,7 @@ export function BlogCard({ post, index = 0 }: { post: BlogPost; index?: number }
         </div>
         <CardHeader className="pt-5">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary">{formatDate(post.date)}</Badge>
+            <Badge variant="secondary">{formatDate(post.date, locale)}</Badge>
             {post.author ? <span className="text-xs text-muted-foreground">{post.author}</span> : null}
           </div>
           <CardTitle className="mt-2 text-xl text-forest">{post.title}</CardTitle>
@@ -32,7 +33,7 @@ export function BlogCard({ post, index = 0 }: { post: BlogPost; index?: number }
           </CardContent>
         ) : null}
         <CardFooter className="mt-auto border-t-0 bg-transparent pt-4 text-sm font-medium text-destructive">
-          <span className="border-b border-transparent transition-colors group-hover:border-destructive">পড়ুন</span>
+          <span className="border-b border-transparent transition-colors group-hover:border-destructive">{uiText[locale].read}</span>
         </CardFooter>
       </Card>
     </Link>

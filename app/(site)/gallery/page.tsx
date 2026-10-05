@@ -1,17 +1,16 @@
-import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
-import { getPublicMedia, getSettings } from "@/lib/db";
+import { getPublicMedia } from "@/lib/db";
+import { getSite, localizedMeta } from "@/lib/locale";
 
 const tints = ["tile-green", "tile-blue", "tile-red"];
 
-export const metadata: Metadata = {
-  title: "গ্যালারি",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর ছবি ও ডকুমেন্ট।",
-};
+export function generateMetadata() {
+  return localizedMeta("gallery");
+}
 
 export default async function GalleryPage() {
-  const copy = (await getSettings()).copy;
+  const copy = (await getSite()).settings.copy;
   const items = await getPublicMedia();
 
   return (

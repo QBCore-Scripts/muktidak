@@ -481,6 +481,45 @@ h6,
   }
 }
 
+.nav-progress {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 60;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, #9fe0b9, #e8f3ec);
+  box-shadow: 0 0 8px rgba(159, 224, 185, 0.6);
+  opacity: 0;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.nav-progress[data-state="loading"] {
+  opacity: 1;
+  transform: scaleX(0.85);
+  transition:
+    transform 9s cubic-bezier(0.08, 0.7, 0.2, 1) 150ms,
+    opacity 0.2s ease 150ms;
+}
+
+.nav-progress[data-state="done"] {
+  opacity: 0;
+  transform: scaleX(1);
+  transition:
+    transform 0.25s ease-out,
+    opacity 0.4s ease 0.2s;
+}
+
+.skeleton-in {
+  animation: skeleton-in 0.4s ease 0.2s both;
+}
+
+@keyframes skeleton-in {
+  from {
+    opacity: 0;
+  }
+}
+
 .hero-video {
   container-type: size;
   overflow: hidden;

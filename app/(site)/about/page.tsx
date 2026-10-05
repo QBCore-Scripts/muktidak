@@ -1,22 +1,20 @@
-import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { pageBySlug, paragraphs } from "@/lib/content";
-import { getActivities, getSettings } from "@/lib/db";
+import { getActivities } from "@/lib/db";
+import { pad2 } from "@/lib/i18n";
+import { getSite, localizedMeta } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: "পরিচিতি",
-  description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) রাজনৈতিক দলের পরিচিতি।",
-};
-
-const bn2 = new Intl.NumberFormat("bn-BD", { minimumIntegerDigits: 2 });
+export function generateMetadata() {
+  return localizedMeta("about");
+}
 
 export default async function AboutPage() {
   const page = await pageBySlug("about");
   const parts = paragraphs(page.body);
-  const settings = await getSettings();
+  const { locale, settings } = await getSite();
   const activities = await getActivities();
 
   return (
@@ -40,7 +38,7 @@ export default async function AboutPage() {
             <Reveal key={item.id} variant="right" index={index}>
               <Card className="lift ring-forest/8 hover:ring-leaf/40">
                 <CardHeader className="grid-cols-[auto_auto_1fr] items-start gap-x-4">
-                  <span className="pt-1 text-sm font-semibold text-leaf tabular-nums">{bn2.format(index + 1)}</span>
+                  <span className="pt-1 text-sm font-semibold text-leaf tabular-nums">{pad2(index + 1, locale)}</span>
                   <Separator orientation="vertical" />
                   <div>
                     <CardTitle className="text-xl text-forest">{item.title}</CardTitle>

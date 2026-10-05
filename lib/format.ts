@@ -1,10 +1,12 @@
+import { intlLocale, type Locale } from "./i18n";
+
 export function formatBdt(amount: number) {
   return `৳${new Intl.NumberFormat("bn-BD").format(amount)}`;
 }
 
-export function formatDate(iso: string) {
+export function formatDate(iso: string, locale: Locale = "bn") {
   const value = iso.length === 10 ? `${iso}T00:00:00` : iso;
-  return new Intl.DateTimeFormat("bn-BD", {
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     day: "numeric",
     month: "long",
     year: "numeric",
