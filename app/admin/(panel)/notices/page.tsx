@@ -3,6 +3,6 @@ import { NoticesView } from "./view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return <NoticesView initial={readDb().notices} />;
+export default async function Page() {
+  return <NoticesView initial={(await readDb()).notices} />;
 }

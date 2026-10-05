@@ -4,7 +4,9 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import type { SiteCopy } from "@/lib/copy";
+import { buttonVariants } from "@/components/ui/button";
 import { siteNameEn } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 import { Mark } from "./Mark";
 
 export function Header({ name, copy }: { name: string; copy: SiteCopy }) {
@@ -32,7 +34,7 @@ export function Header({ name, copy }: { name: string; copy: SiteCopy }) {
           <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
             <Mark />
             <span className="min-w-0">
-              <span className="block truncate text-sm font-semibold tracking-tight md:text-base">{name}</span>
+              <span className="block truncate font-heading text-base md:text-lg">{name}</span>
               <span className="block truncate text-[10px] font-medium tracking-[0.14em] text-paper/65">{siteNameEn}</span>
             </span>
           </Link>
@@ -50,7 +52,7 @@ export function Header({ name, copy }: { name: string; copy: SiteCopy }) {
                 </Link>
               );
             })}
-            <Link href="/donate" className="ml-2 rounded-full bg-donate px-4 py-1.5 text-sm font-semibold text-white hover:bg-[#a82c25]">
+            <Link href="/donate" className={cn(buttonVariants({ variant: "donate" }), "ml-2 rounded-full px-4")}>
               {copy.navDonate}
             </Link>
           </nav>
@@ -72,7 +74,7 @@ export function Header({ name, copy }: { name: string; copy: SiteCopy }) {
                   {label}
                 </Link>
               ))}
-              <Link href="/donate" className="mt-1 rounded-xl bg-donate px-3 py-3 text-center font-semibold" onClick={() => setOpen(false)}>
+              <Link href="/donate" className={cn(buttonVariants({ variant: "donate", size: "xl" }), "mt-1 w-full")} onClick={() => setOpen(false)}>
                 {copy.navDonate}
               </Link>
             </div>

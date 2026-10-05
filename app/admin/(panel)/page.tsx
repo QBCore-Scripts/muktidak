@@ -4,6 +4,6 @@ import { DashboardView } from "./dashboard-view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return <DashboardView initial={dashboardFrom(readDb())} />;
+export default async function Page() {
+  return <DashboardView initial={dashboardFrom(await readDb())} />;
 }

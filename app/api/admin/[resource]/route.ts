@@ -1,7 +1,5 @@
-import { writeFileSync } from "fs";
-import path from "path";
 import { clearSession, getSession, hashPassword, verifyPassword } from "@/lib/auth";
-import { listOf, mediaRecord, newId, privateUploadsDir, readDb, revokeAllSessions, safeId, unlinkStored, updateDb, withoutStored } from "@/lib/db";
+import { deleteMediaFile, listOf, mediaRecord, newId, readDb, revokeAllSessions, safeId, saveMediaFile, updateDb, withoutStored } from "@/lib/db";
 import { mergeCopy } from "@/lib/copy";
 import { dashboardFrom } from "@/lib/admin-snapshot";
 import { todayISO } from "@/lib/format";
@@ -47,7 +45,7 @@ export async function GET(_request: Request, ctx: Ctx) {
   const session = await getSession();
   if (!session) return Response.json({ error: "প্রবেশ করা প্রয়োজন" }, { status: 401 });
   const resource = (await ctx.params).resource;
-  const db = readDb();
+  const db = await readDb();
   if (resource === "dashboard") return Response.json(dashboardFrom(db));
   if (resource === "settings") {
     return Response.json({ settings: db.settings, email: db.admin.email });
@@ -72,10 +70,10 @@ export async function POST(request: Request, ctx: Ctx) {
   const error = validate(resource, picked, true);
   if (error) return Response.json({ error }, { status: 400 });
   const item = { id: newId(), ...defaults(resource), ...picked };
-  if (resource === "blogs" && blogSlugTaken(String((item as { slug?: string }).slug))) {
+  if (resource === "blogs" && await blogSlugTaken(String((item as { slug?: string }).slug))) {
     return Response.json({ error: "এই স্লাগ আগে ব্যবহার হয়েছে" }, { status: 400 });
   }
-  updateDb((db) => {
+  await updateDb((db) => {
     (db[resource] as unknown[]).unshift(item);
   });
   revalidatePath("/", "layout");
@@ -97,12 +95,12 @@ export async function PATCH(request: Request, ctx: Ctx) {
   const picked = pick(body, fields[resource]);
   const error = validate(resource, picked, false);
   if (error) return Response.json({ error }, { status: 400 });
-  if (resource === "blogs" && typeof picked.slug === "string" && blogSlugTaken(picked.slug, id)) {
+  if (resource === "blogs" && typeof picked.slug === "string" && await blogSlugTaken(picked.slug, id)) {
     return Response.json({ error: "এই স্লাগ আগে ব্যবহার হয়েছে" }, { status: 400 });
   }
 
   let updated = false;
-  updateDb((db) => {
+  await updateDb((db) => {
     const list = db[resource] as { id: string }[];
     const index = list.findIndex((item) => item.id === id);
     if (index === -1) return;
@@ -123,15 +121,15 @@ export async function DELETE(request: Request, ctx: Ctx) {
   }
   const id = new URL(request.url).searchParams.get("id") ?? "";
   if (!safeId(id)) return Response.json({ error: "আইডি নেই" }, { status: 400 });
-  const stored = resource === "media" ? mediaRecord(id)?.stored ?? "" : "";
+  const stored = resource === "media" ? (await mediaRecord(id))?.stored ?? "" : "";
   let removed = false;
-  updateDb((db) => {
+  await updateDb((db) => {
     const list = db[resource] as { id: string }[];
     const next = list.filter((item) => item.id !== id);
     removed = next.length !== list.length;
     db[resource] = next as never;
   });
-  if (removed) unlinkStored(stored);
+  if (removed) await deleteMediaFile(stored);
   revalidatePath("/", "layout");
   return Response.json({ ok: true });
 }
@@ -215,8 +213,8 @@ function isLocalPath(value: string) {
   return value.startsWith("/") && !value.startsWith("//") && !value.includes("..") && /^\/[A-Za-z0-9._~/-]+$/.test(value);
 }
 
-function blogSlugTaken(slug: string, exceptId = "") {
-  return readDb().blogs.some((item) => item.slug === slug && item.id !== exceptId);
+async function blogSlugTaken(slug: string, exceptId = "") {
+  return (await readDb()).blogs.some((item) => item.slug === slug && item.id !== exceptId);
 }
 
 function defaults(resource: ListKey) {
@@ -243,7 +241,7 @@ async function saveSettings(body: Record<string, unknown>) {
   if (newPassword && newPassword.length < 12) {
     return Response.json({ error: "নতুন পাসওয়ার্ড অন্তত ১২ অক্ষরের হতে হবে" }, { status: 400 });
   }
-  const existing = readDb();
+  const existing = await readDb();
   const emailChanging = Boolean(nextEmail) && nextEmail !== existing.admin.email.toLowerCase();
   if (emailChanging && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(nextEmail)) {
     return Response.json({ error: "অ্যাডমিন ইমেইল সঠিক নয়" }, { status: 400 });
@@ -251,7 +249,7 @@ async function saveSettings(body: Record<string, unknown>) {
   if ((newPassword || emailChanging) && !verifyPassword(currentPassword, existing.admin.salt, existing.admin.passwordHash)) {
     return Response.json({ error: "বর্তমান পাসওয়ার্ড মিলছে না" }, { status: 400 });
   }
-  updateDb((db) => {
+  await updateDb((db) => {
     db.settings = {
       name: str(next.name, 120) || db.settings.name,
       shortName: str(next.shortName, 80) || db.settings.shortName,
@@ -271,7 +269,7 @@ async function saveSettings(body: Record<string, unknown>) {
   });
   const signedOut = Boolean(newPassword || emailChanging);
   if (signedOut) {
-    revokeAllSessions();
+    await revokeAllSessions();
     await clearSession();
   }
   revalidatePath("/", "layout");
@@ -300,9 +298,8 @@ async function saveUpload(request: Request) {
   const ext = sniff(bytes);
   if (!ext) return Response.json({ error: "শুধু jpg, png, webp বা gif ছবি আপলোড করা যাবে" }, { status: 400 });
   const id = newId();
-  privateUploadsDir();
-  const target = path.join(process.cwd(), "data", "uploads", `${id}.${ext}`);
-  writeFileSync(target, bytes, { mode: 0o600 });
+  const stored = `${id}.${ext}`;
+  await saveMediaFile(stored, bytes);
   const item = {
     id,
     name: plain(file.name, 120) || "image",
@@ -310,11 +307,16 @@ async function saveUpload(request: Request) {
     size: bytes.length,
     url: `/api/media/${id}`,
     private: form.get("private") === "true",
-    stored: target,
+    stored,
   };
-  updateDb((db) => {
-    db.media.unshift(item);
-  });
+  try {
+    await updateDb((db) => {
+      db.media.unshift(item);
+    });
+  } catch (error) {
+    await deleteMediaFile(stored);
+    throw error;
+  }
   revalidatePath("/", "layout");
   return Response.json(withoutStored(item));
 }

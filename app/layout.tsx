@@ -1,12 +1,18 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Bengali } from "next/font/google";
+import localFont from "next/font/local";
 import { siteDescription, siteKeywords, siteNameBn, siteNameEn, siteUrl } from "@/lib/seo";
 import "./globals.css";
+import { cn } from "@/lib/utils";
 
-const bangla = Noto_Sans_Bengali({
-  subsets: ["bengali"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-bangla",
+const body = localFont({
+  src: "./fonts/kalpurush.woff2",
+  variable: "--font-body",
+  display: "swap",
+});
+
+const display = localFont({
+  src: "./fonts/bensen-handwriting.woff2",
+  variable: "--font-display",
   display: "swap",
 });
 
@@ -42,7 +48,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="bn" className={`${bangla.variable} h-full antialiased`}>
+    <html lang="bn" data-scroll-behavior="smooth" className={cn("h-full", "antialiased", body.variable, display.variable, "font-sans")}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

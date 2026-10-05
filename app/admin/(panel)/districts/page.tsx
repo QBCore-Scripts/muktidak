@@ -3,6 +3,6 @@ import { DistrictsView } from "./view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return <DistrictsView initial={readDb().districts} />;
+export default async function Page() {
+  return <DistrictsView initial={(await readDb()).districts} />;
 }

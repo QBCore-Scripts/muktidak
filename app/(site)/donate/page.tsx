@@ -8,9 +8,9 @@ export const metadata: Metadata = {
   description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর খোলা দান হিসাব।",
 };
 
-export default function DonatePage() {
-  const copy = getSettings().copy;
-  const accounts = getVisibleAccounts();
+export default async function DonatePage() {
+  const copy = (await getSettings()).copy;
+  const accounts = await getVisibleAccounts();
 
   return (
     <>

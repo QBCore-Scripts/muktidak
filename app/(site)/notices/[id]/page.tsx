@@ -9,7 +9,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const notice = getPublishedNotice(id);
+  const notice = await getPublishedNotice(id);
   const title = notice?.title ?? "নোটিশ";
   return {
     title,
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NoticePage({ params }: Props) {
   const { id } = await params;
-  const notice = getPublishedNotice(id);
+  const notice = await getPublishedNotice(id);
   if (!notice) notFound();
 
   return (

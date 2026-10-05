@@ -22,7 +22,7 @@ export function Footer({ settings }: { settings: Settings }) {
             <div className="flex items-center gap-3">
               <Mark className="h-9 w-9" />
               <span>
-                <p className="font-semibold">{settings.shortName}</p>
+                <p className="font-heading text-lg">{settings.shortName}</p>
                 <p className="text-[11px] tracking-[0.12em] text-paper/55">{siteNameEn}</p>
               </span>
             </div>

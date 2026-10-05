@@ -3,6 +3,6 @@ import { MembersView } from "./view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return <MembersView initial={readDb().members} />;
+export default async function Page() {
+  return <MembersView initial={(await readDb()).members} />;
 }

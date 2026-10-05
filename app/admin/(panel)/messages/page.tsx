@@ -3,6 +3,6 @@ import { MessagesView } from "./view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return <MessagesView initial={readDb().messages} />;
+export default async function Page() {
+  return <MessagesView initial={(await readDb()).messages} />;
 }

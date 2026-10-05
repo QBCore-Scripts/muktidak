@@ -3,7 +3,7 @@ import { PagesView } from "./view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  const db = readDb();
+export default async function Page() {
+  const db = await readDb();
   return <PagesView pages={db.pages} activities={db.activities} />;
 }

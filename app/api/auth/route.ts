@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   const body = (await readJson(request, 2_000)) as { email?: unknown; password?: unknown } | null;
   const email = plain(body?.email, 120).toLowerCase();
   const password = typeof body?.password === "string" ? body.password.slice(0, 200) : "";
-  const admin = getAdmin();
+  const admin = await getAdmin();
   const passwordOk = verifyPassword(password, admin.salt, admin.passwordHash);
   const emailOk = timingSafeEqual(createHash("sha256").update(email).digest(), createHash("sha256").update(admin.email.toLowerCase()).digest());
   if (!emailOk || !passwordOk) {

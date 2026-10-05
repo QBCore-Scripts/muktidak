@@ -3,6 +3,6 @@ import { MediaView } from "./view";
 
 export const dynamic = "force-dynamic";
 
-export default function Page() {
-  return <MediaView initial={readDb().media.map((item) => withoutStored(item))} />;
+export default async function Page() {
+  return <MediaView initial={(await readDb()).media.map((item) => withoutStored(item))} />;
 }

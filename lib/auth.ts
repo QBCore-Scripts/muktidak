@@ -31,9 +31,9 @@ export async function getSession() {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
   if (!token || token.length < 32 || token.length > 200) return null;
-  const row = findSession(hashToken(token));
+  const row = await findSession(hashToken(token));
   if (!row || row.expires < Date.now()) {
-    if (row) deleteSession(hashToken(token));
+    if (row) await deleteSession(hashToken(token));
     return null;
   }
   return { email: row.email };
@@ -41,7 +41,7 @@ export async function getSession() {
 
 export async function setSession(email: string) {
   const token = randomBytes(32).toString("base64url");
-  saveSession(hashToken(token), email, Date.now() + WEEK * 1000);
+  await saveSession(hashToken(token), email, Date.now() + WEEK * 1000);
   const jar = await cookies();
   jar.set(COOKIE, token, {
     httpOnly: true,
@@ -55,6 +55,6 @@ export async function setSession(email: string) {
 export async function clearSession() {
   const jar = await cookies();
   const token = jar.get(COOKIE)?.value;
-  if (token) deleteSession(hashToken(token));
+  if (token) await deleteSession(hashToken(token));
   jar.delete(COOKIE);
 }

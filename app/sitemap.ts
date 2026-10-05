@@ -6,16 +6,16 @@ export const dynamic = "force-dynamic";
 
 const pages = ["", "/about", "/vision", "/activities", "/gallery", "/notices", "/blogs", "/districts", "/contact", "/donate"];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const origin = siteUrl();
   const now = new Date();
-  const notices = getPublishedNotices().map((notice) => ({
+  const notices = (await getPublishedNotices()).map((notice) => ({
     url: `${origin}/notices/${notice.id}`,
     lastModified: now,
     changeFrequency: "weekly" as const,
     priority: 0.6,
   }));
-  const blogs = getPublishedBlogs().map((post) => ({
+  const blogs = (await getPublishedBlogs()).map((post) => ({
     url: `${origin}/blogs/${post.slug}`,
     lastModified: now,
     changeFrequency: "weekly" as const,

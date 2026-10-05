@@ -1,8 +1,8 @@
 import { getPage } from "./db";
 import type { PageContent } from "./types";
 
-export function pageBySlug(slug: string): PageContent {
-  const page = getPage(slug);
+export async function pageBySlug(slug: string): Promise<PageContent> {
+  const page = await getPage(slug);
   if (!page) {
     return { id: slug, slug, title: slug, body: "" };
   }

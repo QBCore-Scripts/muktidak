@@ -5,8 +5,8 @@ import { siteDescription, siteNameBn, siteNameEn, siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
-  const settings = getSettings();
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSettings();
   const origin = siteUrl();
   const jsonLd = {
     "@context": "https://schema.org",
@@ -26,7 +26,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         মূল অংশে যান
       </a>
       <Header name={settings.name} copy={settings.copy} />
-      <main id="main" className="flex-1">{children}</main>
+      <main id="main" className="flex-1 overflow-x-clip">{children}</main>
       <Footer settings={settings} />
     </>
   );

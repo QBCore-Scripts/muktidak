@@ -1,7 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 import type { BankAccount } from "@/lib/types";
+import { Reveal } from "./Reveal";
 
 export function AccountCards({ accounts }: { accounts: BankAccount[] }) {
   const [copied, setCopied] = useState("");
@@ -12,30 +17,46 @@ export function AccountCards({ accounts }: { accounts: BankAccount[] }) {
   }
 
   if (accounts.length === 0) {
-    return <p className="text-muted">এখন কোনো অ্যাকাউন্ট দান পাতায় খোলা নেই।</p>;
+    return <p className="text-muted-foreground">এখন কোনো অ্যাকাউন্ট দান পাতায় খোলা নেই।</p>;
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {accounts.map((account) => (
-        <article key={account.id} className="panel rounded-2xl border border-line bg-paper p-5">
-          <p className="text-sm text-leaf">{account.accountType}</p>
-          <h2 className="mt-1 text-xl font-semibold text-forest">{account.bank}</h2>
-          <p className="text-sm text-muted">{account.branch}</p>
-          <dl className="mt-4 grid gap-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">নাম</dt>
-              <dd className="text-right font-medium">{account.accountName}</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-muted">নম্বর</dt>
-              <dd className="font-medium tracking-wide">{account.accountNumber}</dd>
-            </div>
-          </dl>
-          <button type="button" onClick={() => copy(account.accountNumber)} className="mt-4 rounded-lg border border-line px-3 py-2 text-sm font-medium hover:border-leaf">
-            {copied === account.accountNumber ? "কপি হয়েছে" : "নম্বর কপি"}
-          </button>
-        </article>
+    <div className="grid gap-5 md:grid-cols-2">
+      {accounts.map((account, index) => (
+        <Reveal key={account.id} index={index % 2}>
+          <Card className="lift h-full rounded-2xl ring-forest/8 [--card-spacing:--spacing(6)]">
+            <CardHeader>
+              <CardTitle className="text-2xl text-forest">{account.bank}</CardTitle>
+              <CardDescription>{account.branch}</CardDescription>
+              <CardAction>
+                <Badge variant="secondary">{account.accountType}</Badge>
+              </CardAction>
+            </CardHeader>
+            <CardContent>
+              <Separator className="mb-4" />
+              <dl className="grid gap-3 text-sm">
+                <div className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">নাম</dt>
+                  <dd className="text-right font-medium">{account.accountName}</dd>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <dt className="text-muted-foreground">নম্বর</dt>
+                  <dd className="font-mono text-base font-medium tracking-wider">{account.accountNumber}</dd>
+                </div>
+              </dl>
+            </CardContent>
+            <CardFooter className="mt-auto bg-paper">
+              <Button
+                variant={copied === account.accountNumber ? "secondary" : "outline"}
+                size="lg"
+                className="rounded-full px-4"
+                onClick={() => copy(account.accountNumber)}
+              >
+                {copied === account.accountNumber ? "কপি হয়েছে" : "নম্বর কপি করুন"}
+              </Button>
+            </CardFooter>
+          </Card>
+        </Reveal>
       ))}
     </div>
   );

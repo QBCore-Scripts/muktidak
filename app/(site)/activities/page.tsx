@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { PageHeader } from "@/components/site/PageHeader";
+import { Reveal } from "@/components/site/Reveal";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { pageBySlug, paragraphs } from "@/lib/content";
 import { getActivities, getSettings } from "@/lib/db";
 
@@ -8,22 +11,33 @@ export const metadata: Metadata = {
   description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর মাঠের কার্যক্রম।",
 };
 
-export default function ActivitiesPage() {
-  const page = pageBySlug("activities");
+const bn2 = new Intl.NumberFormat("bn-BD", { minimumIntegerDigits: 2 });
+
+export default async function ActivitiesPage() {
+  const page = await pageBySlug("activities");
   const intro = paragraphs(page.body)[0];
-  const copy = getSettings().copy;
-  const activities = getActivities();
+  const copy = (await getSettings()).copy;
+  const activities = await getActivities();
 
   return (
     <>
       <PageHeader kicker={copy.activitiesKicker} title={page.title} text={intro} />
-      <div className="mx-auto grid max-w-6xl gap-4 px-4 py-10 md:grid-cols-2">
-        {activities.map((item) => (
-          <article key={item.id} className="panel rounded-2xl border border-line bg-paper p-6">
-            <p className="text-xs font-medium text-leaf">{item.date}</p>
-            <h2 className="mt-2 text-2xl font-semibold text-forest">{item.title}</h2>
-            <p className="mt-3 leading-relaxed text-muted">{item.summary}</p>
-          </article>
+      <div className="mx-auto grid max-w-6xl gap-5 px-4 py-12 md:grid-cols-2">
+        {activities.map((item, index) => (
+          <Reveal key={item.id} index={index % 2}>
+            <Card className="lift h-full gap-5 rounded-2xl py-7 ring-forest/8 [--card-spacing:--spacing(7)] hover:ring-leaf/40">
+              <CardHeader>
+                {item.date ? <Badge variant="outline" className="border-leaf/30 text-leaf">{item.date}</Badge> : null}
+                <CardTitle className="mt-2 text-3xl text-forest">{item.title}</CardTitle>
+                <CardAction>
+                  <span className="font-heading text-5xl leading-none text-forest/10">{bn2.format(index + 1)}</span>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-base leading-relaxed">{item.summary}</CardDescription>
+              </CardContent>
+            </Card>
+          </Reveal>
         ))}
       </div>
     </>

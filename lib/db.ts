@@ -1,8 +1,9 @@
 import { randomBytes, randomUUID, scryptSync } from "crypto";
-import { chmodSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from "fs";
-import { createRequire } from "node:module";
+import { readFileSync } from "fs";
 import path from "path";
-import { mergeCopy, parseCopy } from "./copy";
+import mongoose from "mongoose";
+import { mergeCopy } from "./copy";
+import connectToDatabase from "./mongodb";
 import type {
   Activity,
   AdminAuth,
@@ -10,192 +11,56 @@ import type {
   BlogPost,
   Database,
   District,
-  Donation,
   ListKey,
   MediaItem,
-  Member,
-  Message,
   Notice,
   PageContent,
   Settings,
 } from "./types";
 
-type Stmt = {
-  all: (...args: unknown[]) => Record<string, unknown>[];
-  get: (...args: unknown[]) => Record<string, unknown> | undefined;
-  run: (...args: unknown[]) => unknown;
-};
+const STATE_ID = "main";
+const LIST_KEYS: ListKey[] = [
+  "members",
+  "donations",
+  "accounts",
+  "notices",
+  "blogs",
+  "pages",
+  "media",
+  "districts",
+  "activities",
+  "messages",
+];
 
-type Sql = {
-  exec: (source: string) => void;
-  prepare: (source: string) => Stmt;
-};
+type StateDoc = Partial<Database> & { _id: string; rev?: number };
 
-const globalForDb = globalThis as unknown as { muktidakSql?: Sql };
+const AppState =
+  (mongoose.models.AppState as mongoose.Model<StateDoc>) ||
+  mongoose.model<StateDoc>(
+    "AppState",
+    new mongoose.Schema({ _id: String, rev: { type: Number, default: 0 } }, { strict: false, versionKey: false, collection: "app_state" }),
+  );
 
-function ensureCopy(db: Sql) {
-  const columns = db.prepare("PRAGMA table_info(settings)").all();
-  if (columns.length && !columns.some((column) => column.name === "copy")) {
-    db.exec("ALTER TABLE settings ADD COLUMN copy TEXT NOT NULL DEFAULT ''");
-  }
-}
+const SessionModel =
+  (mongoose.models.Session as mongoose.Model<{ token_hash: string; email: string; expires: number }>) ||
+  mongoose.model(
+    "Session",
+    new mongoose.Schema(
+      {
+        token_hash: { type: String, required: true, unique: true },
+        email: { type: String, required: true },
+        expires: { type: Number, required: true, index: true },
+      },
+      { versionKey: false, collection: "sessions" },
+    ),
+  );
 
-function ensureBlogs(db: Sql) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS blogs (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL,
-      excerpt TEXT NOT NULL,
-      body TEXT NOT NULL,
-      cover TEXT NOT NULL,
-      author TEXT NOT NULL,
-      date TEXT NOT NULL,
-      published INTEGER NOT NULL,
-      sort INTEGER NOT NULL
-    );
-  `);
-}
-
-function open(): Sql {
-  if (globalForDb.muktidakSql) {
-    ensureCopy(globalForDb.muktidakSql);
-    ensureBlogs(globalForDb.muktidakSql);
-    return globalForDb.muktidakSql;
-  }
-  const dir = path.join(process.cwd(), "data");
-  mkdirSync(dir, { recursive: true });
-  const file = path.join(dir, "app.db");
-  const { DatabaseSync } = createRequire(path.join(process.cwd(), "package.json"))("node:sqlite") as {
-    DatabaseSync: new (filename: string) => Sql;
-  };
-  const db = new DatabaseSync(file);
-  db.exec("PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 3000;");
-  migrate(db);
-  try {
-    chmodSync(file, 0o600);
-  } catch {
-    /* Windows does not honor the Unix mode. The file stays outside public/. */
-  }
-  globalForDb.muktidakSql = db;
-  return db;
-}
-
-function migrate(db: Sql) {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS settings (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      name TEXT NOT NULL,
-      short_name TEXT NOT NULL,
-      tagline TEXT NOT NULL,
-      quote TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      email TEXT NOT NULL,
-      address TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS admin (
-      id INTEGER PRIMARY KEY CHECK (id = 1),
-      email TEXT NOT NULL,
-      salt TEXT NOT NULL,
-      password_hash TEXT NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS members (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      district TEXT NOT NULL,
-      role TEXT NOT NULL,
-      status TEXT NOT NULL,
-      joined TEXT NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS donations (
-      id TEXT PRIMARY KEY,
-      donor TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      amount INTEGER NOT NULL,
-      method TEXT NOT NULL,
-      purpose TEXT NOT NULL,
-      date TEXT NOT NULL,
-      status TEXT NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS accounts (
-      id TEXT PRIMARY KEY,
-      bank TEXT NOT NULL,
-      branch TEXT NOT NULL,
-      account_name TEXT NOT NULL,
-      account_number TEXT NOT NULL,
-      account_type TEXT NOT NULL,
-      visible INTEGER NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS notices (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      body TEXT NOT NULL,
-      date TEXT NOT NULL,
-      published INTEGER NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS pages (
-      id TEXT PRIMARY KEY,
-      slug TEXT NOT NULL UNIQUE,
-      title TEXT NOT NULL,
-      body TEXT NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS media (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      folder TEXT NOT NULL,
-      size INTEGER NOT NULL,
-      url TEXT NOT NULL,
-      private INTEGER NOT NULL,
-      stored TEXT NOT NULL DEFAULT '',
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS districts (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      office TEXT NOT NULL,
-      contact TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      members INTEGER NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS activities (
-      id TEXT PRIMARY KEY,
-      title TEXT NOT NULL,
-      summary TEXT NOT NULL,
-      date TEXT NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS messages (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      phone TEXT NOT NULL,
-      email TEXT NOT NULL,
-      body TEXT NOT NULL,
-      date TEXT NOT NULL,
-      read INTEGER NOT NULL,
-      sort INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS sessions (
-      token_hash TEXT PRIMARY KEY,
-      email TEXT NOT NULL,
-      expires INTEGER NOT NULL
-    );
-  `);
-  ensureCopy(db);
-  ensureBlogs(db);
-  const seeded = db.prepare("SELECT COUNT(*) AS n FROM admin").get();
-  if (!seeded || Number(seeded.n) === 0) {
-    const seed = JSON.parse(readFileSync(path.join(process.cwd(), "data", "db.json"), "utf8")) as Database;
-    sealAdmin(seed);
-    writeAll(db, seed);
-  }
-}
+const MediaFile =
+  (mongoose.models.MediaFile as mongoose.Model<{ _id: string; data: Buffer }>) ||
+  mongoose.model(
+    "MediaFile",
+    new mongoose.Schema({ _id: String, data: { type: Buffer, required: true } }, { versionKey: false, collection: "media_files" }),
+  );
 
 function sealAdmin(seed: Database) {
   const fromEnv = process.env.ADMIN_PASSWORD?.slice(0, 200) ?? "";
@@ -204,277 +69,66 @@ function sealAdmin(seed: Database) {
   seed.admin.email = seed.admin.email || "admin@muktidak71.org";
   seed.admin.salt = salt;
   seed.admin.passwordHash = scryptSync(password, salt, 32).toString("hex");
-  if (fromEnv.length < 12) {
-    writeFileSync(path.join(process.cwd(), "data", ".admin-password"), `${seed.admin.email}\n${password}\n`, { mode: 0o600 });
-  }
+  return fromEnv.length < 12 ? password : "";
 }
 
-function str(value: unknown) {
-  return typeof value === "string" ? value : "";
-}
-
-function num(value: unknown) {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : 0;
-}
-
-function yes(value: unknown) {
-  return Number(value) === 1;
-}
-
-function bit(value: boolean) {
-  return value ? 1 : 0;
-}
-
-function readAll(db: Sql): Database {
-  const settings = db.prepare("SELECT * FROM settings WHERE id = 1").get();
-  const admin = db.prepare("SELECT email, salt, password_hash FROM admin WHERE id = 1").get();
-  if (!settings || !admin) throw new Error("ডেটাবেস খালি");
-  return {
-    settings: mapSettings(settings),
-    admin: {
-      email: str(admin.email),
-      salt: str(admin.salt),
-      passwordHash: str(admin.password_hash),
-    },
-    members: db.prepare("SELECT * FROM members ORDER BY sort ASC").all().map(mapMember),
-    donations: db.prepare("SELECT * FROM donations ORDER BY sort ASC").all().map(mapDonation),
-    accounts: db.prepare("SELECT * FROM accounts ORDER BY sort ASC").all().map(mapAccount),
-    notices: db.prepare("SELECT * FROM notices ORDER BY sort ASC").all().map(mapNotice),
-    blogs: db.prepare("SELECT * FROM blogs ORDER BY sort ASC").all().map(mapBlog),
-    pages: db.prepare("SELECT * FROM pages ORDER BY sort ASC").all().map(mapPage),
-    media: db.prepare("SELECT * FROM media ORDER BY sort ASC").all().map(mapMedia),
-    districts: db.prepare("SELECT * FROM districts ORDER BY sort ASC").all().map(mapDistrict),
-    activities: db.prepare("SELECT * FROM activities ORDER BY sort ASC").all().map(mapActivity),
-    messages: db.prepare("SELECT * FROM messages ORDER BY sort ASC").all().map(mapMessage),
-  };
-}
-
-function writeAll(db: Sql, data: Database) {
-  db.exec("BEGIN IMMEDIATE");
+async function seedState() {
+  const seed = JSON.parse(readFileSync(path.join(process.cwd(), "data", "db.json"), "utf8")) as Database;
+  const generated = sealAdmin(seed);
   try {
-    db.exec(`
-      DELETE FROM settings;
-      DELETE FROM admin;
-      DELETE FROM members;
-      DELETE FROM donations;
-      DELETE FROM accounts;
-      DELETE FROM notices;
-      DELETE FROM blogs;
-      DELETE FROM pages;
-      DELETE FROM media;
-      DELETE FROM districts;
-      DELETE FROM activities;
-      DELETE FROM messages;
-    `);
-    db.prepare(
-      "INSERT INTO settings (id, name, short_name, tagline, quote, phone, email, address, copy) VALUES (1, ?, ?, ?, ?, ?, ?, ?, ?)",
-    ).run(
-      data.settings.name,
-      data.settings.shortName,
-      data.settings.tagline,
-      data.settings.quote,
-      data.settings.phone,
-      data.settings.email,
-      data.settings.address,
-      JSON.stringify(mergeCopy(data.settings.copy)),
-    );
-    db.prepare("INSERT INTO admin (id, email, salt, password_hash) VALUES (1, ?, ?, ?)").run(
-      data.admin.email,
-      data.admin.salt,
-      data.admin.passwordHash,
-    );
-    const member = db.prepare(
-      "INSERT INTO members (id, name, phone, district, role, status, joined, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    );
-    data.members.forEach((item, sort) => member.run(item.id, item.name, item.phone, item.district, item.role, item.status, item.joined, sort));
-    const donation = db.prepare(
-      "INSERT INTO donations (id, donor, phone, amount, method, purpose, date, status, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    );
-    data.donations.forEach((item, sort) =>
-      donation.run(item.id, item.donor, item.phone, Math.round(item.amount), item.method, item.purpose, item.date, item.status, sort),
-    );
-    const account = db.prepare(
-      "INSERT INTO accounts (id, bank, branch, account_name, account_number, account_type, visible, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    );
-    data.accounts.forEach((item, sort) =>
-      account.run(item.id, item.bank, item.branch, item.accountName, item.accountNumber, item.accountType, bit(item.visible), sort),
-    );
-    const notice = db.prepare(
-      "INSERT INTO notices (id, title, body, date, published, sort) VALUES (?, ?, ?, ?, ?, ?)",
-    );
-    data.notices.forEach((item, sort) => notice.run(item.id, item.title, item.body, item.date, bit(item.published), sort));
-    const blog = db.prepare(
-      "INSERT INTO blogs (id, slug, title, excerpt, body, cover, author, date, published, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    );
-    (data.blogs ?? []).forEach((item, sort) =>
-      blog.run(item.id, item.slug, item.title, item.excerpt, item.body, item.cover, item.author, item.date, bit(item.published), sort),
-    );
-    const page = db.prepare("INSERT INTO pages (id, slug, title, body, sort) VALUES (?, ?, ?, ?, ?)");
-    data.pages.forEach((item, sort) => page.run(item.id, item.slug, item.title, item.body, sort));
-    const media = db.prepare(
-      "INSERT INTO media (id, name, folder, size, url, private, stored, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    );
-    data.media.forEach((item, sort) =>
-      media.run(item.id, item.name, item.folder, Math.round(item.size), item.url, bit(item.private), item.stored ?? "", sort),
-    );
-    const district = db.prepare(
-      "INSERT INTO districts (id, name, office, contact, phone, members, sort) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    );
-    data.districts.forEach((item, sort) =>
-      district.run(item.id, item.name, item.office, item.contact, item.phone, Math.round(item.members), sort),
-    );
-    const activity = db.prepare(
-      "INSERT INTO activities (id, title, summary, date, sort) VALUES (?, ?, ?, ?, ?)",
-    );
-    data.activities.forEach((item, sort) => activity.run(item.id, item.title, item.summary, item.date, sort));
-    const message = db.prepare(
-      "INSERT INTO messages (id, name, phone, email, body, date, read, sort) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-    );
-    data.messages.forEach((item, sort) =>
-      message.run(item.id, item.name, item.phone, item.email, item.body, item.date, bit(item.read), sort),
-    );
-    db.exec("COMMIT");
-  } catch (error) {
-    try {
-      db.exec("ROLLBACK");
-    } catch {
-      /* already closed */
+    const result = await AppState.updateOne({ _id: STATE_ID }, { $setOnInsert: { ...seed, rev: 0 } }, { upsert: true });
+    if (generated && result.upsertedCount === 1) {
+      console.warn(`[muktidak] ADMIN_PASSWORD not set. Generated admin login: ${seed.admin.email} / ${generated}`);
     }
-    throw error;
+  } catch (error) {
+    if ((error as { code?: number }).code !== 11000) throw error;
   }
 }
 
-function mapSettings(row: Record<string, unknown>): Settings {
-  return {
-    name: str(row.name),
-    shortName: str(row.short_name),
-    tagline: str(row.tagline),
-    quote: str(row.quote),
-    phone: str(row.phone),
-    email: str(row.email),
-    address: str(row.address),
-    copy: parseCopy(row.copy),
-  };
+async function loadState(projection?: Record<string, 1>): Promise<StateDoc> {
+  await connectToDatabase();
+  let doc = await AppState.findById(STATE_ID, projection).lean<StateDoc>();
+  if (!doc) {
+    await seedState();
+    doc = await AppState.findById(STATE_ID, projection).lean<StateDoc>();
+  }
+  if (!doc) throw new Error("ডেটাবেস খালি");
+  return doc;
 }
 
-function mapMember(row: Record<string, unknown>): Member {
-  return {
-    id: str(row.id),
-    name: str(row.name),
-    phone: str(row.phone),
-    district: str(row.district),
-    role: str(row.role),
-    status: row.status === "inactive" ? "inactive" : "active",
-    joined: str(row.joined),
-  };
-}
-
-function mapDonation(row: Record<string, unknown>): Donation {
-  return {
-    id: str(row.id),
-    donor: str(row.donor),
-    phone: str(row.phone),
-    amount: num(row.amount),
-    method: str(row.method),
-    purpose: str(row.purpose),
-    date: str(row.date),
-    status: row.status === "pending" ? "pending" : "received",
-  };
-}
-
-function mapAccount(row: Record<string, unknown>): BankAccount {
-  return {
-    id: str(row.id),
-    bank: str(row.bank),
-    branch: str(row.branch),
-    accountName: str(row.account_name),
-    accountNumber: str(row.account_number),
-    accountType: str(row.account_type),
-    visible: yes(row.visible),
-  };
-}
-
-function mapNotice(row: Record<string, unknown>): Notice {
-  return {
-    id: str(row.id),
-    title: str(row.title),
-    body: str(row.body),
-    date: str(row.date),
-    published: yes(row.published),
-  };
-}
-
-function mapBlog(row: Record<string, unknown>): BlogPost {
-  return {
-    id: str(row.id),
-    slug: str(row.slug),
-    title: str(row.title),
-    excerpt: str(row.excerpt),
-    body: str(row.body),
-    cover: str(row.cover),
-    author: str(row.author),
-    date: str(row.date),
-    published: yes(row.published),
-  };
-}
-
-function mapPage(row: Record<string, unknown>): PageContent {
-  return { id: str(row.id), slug: str(row.slug), title: str(row.title), body: str(row.body) };
-}
-
-function mapMedia(row: Record<string, unknown>): MediaItem {
-  return {
-    id: str(row.id),
-    name: str(row.name),
-    folder: str(row.folder),
-    size: num(row.size),
-    url: str(row.url),
-    private: yes(row.private),
-    stored: str(row.stored),
-  };
-}
-
-function mapDistrict(row: Record<string, unknown>): District {
-  return {
-    id: str(row.id),
-    name: str(row.name),
-    office: str(row.office),
-    contact: str(row.contact),
-    phone: str(row.phone),
-    members: num(row.members),
-  };
-}
-
-function mapActivity(row: Record<string, unknown>): Activity {
-  return { id: str(row.id), title: str(row.title), summary: str(row.summary), date: str(row.date) };
-}
-
-function mapMessage(row: Record<string, unknown>): Message {
-  return {
-    id: str(row.id),
-    name: str(row.name),
-    phone: str(row.phone),
-    email: str(row.email),
-    body: str(row.body),
-    date: str(row.date),
-    read: yes(row.read),
-  };
-}
-
-export function readDb(): Database {
-  return readAll(open());
-}
-
-export function writeDb(db: Database) {
-  writeAll(open(), db);
-}
-
-export function updateDb(mutator: (db: Database) => void) {
-  const db = readAll(open());
-  mutator(db);
-  writeAll(open(), db);
+function toDatabase(doc: StateDoc): Database {
+  if (!doc.settings || !doc.admin) throw new Error("ডেটাবেস খালি");
+  const db = { settings: doc.settings, admin: doc.admin } as Database;
+  for (const key of LIST_KEYS) (db as Record<ListKey, unknown[]>)[key] = doc[key] ?? [];
   return db;
+}
+
+function fields(db: Database) {
+  const out: Record<string, unknown> = { settings: db.settings, admin: db.admin };
+  for (const key of LIST_KEYS) out[key] = db[key];
+  return out;
+}
+
+export async function readDb(): Promise<Database> {
+  return toDatabase(await loadState());
+}
+
+export async function writeDb(db: Database) {
+  await connectToDatabase();
+  await AppState.updateOne({ _id: STATE_ID }, { $set: fields(db), $inc: { rev: 1 } }, { upsert: true });
+}
+
+export async function updateDb(mutator: (db: Database) => void) {
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const doc = await loadState();
+    const db = toDatabase(doc);
+    mutator(db);
+    const rev = doc.rev ?? 0;
+    const filter = doc.rev === undefined ? { _id: STATE_ID, rev: { $exists: false } } : { _id: STATE_ID, rev };
+    const result = await AppState.updateOne(filter, { $set: { ...fields(db), rev: rev + 1 } });
+    if (result.matchedCount === 1) return db;
+  }
+  throw new Error("ডেটাবেস ব্যস্ত, আবার চেষ্টা করুন");
 }
 
 export function newId() {
@@ -495,136 +149,118 @@ export function withoutStored<T extends { stored?: string }>(item: T) {
   return copy;
 }
 
-export function getSettings(): Settings {
-  const row = open()
-    .prepare("SELECT name, short_name, tagline, quote, phone, email, address, copy FROM settings WHERE id = 1")
-    .get();
-  if (!row) throw new Error("সেটিংস নেই");
-  return mapSettings(row);
+export async function getSettings(): Promise<Settings> {
+  const { settings } = await loadState({ settings: 1 });
+  if (!settings) throw new Error("সেটিংস নেই");
+  return { ...settings, copy: mergeCopy(settings.copy) };
 }
 
-export function getActivities(): Activity[] {
-  return open().prepare("SELECT id, title, summary, date FROM activities ORDER BY sort ASC").all().map(mapActivity);
+export async function getActivities(): Promise<Activity[]> {
+  return (await loadState({ activities: 1 })).activities ?? [];
 }
 
-export function getPublishedNotices(): Notice[] {
-  return open()
-    .prepare("SELECT id, title, body, date, published FROM notices WHERE published = 1 ORDER BY sort ASC")
-    .all()
-    .map(mapNotice);
+export async function getPublishedNotices(): Promise<Notice[]> {
+  return ((await loadState({ notices: 1 })).notices ?? []).filter((item) => item.published);
 }
 
-export function getPublishedBlogs(): BlogPost[] {
-  return open()
-    .prepare("SELECT id, slug, title, excerpt, body, cover, author, date, published FROM blogs WHERE published = 1 ORDER BY sort ASC")
-    .all()
-    .map(mapBlog);
+export async function getPublishedBlogs(): Promise<BlogPost[]> {
+  return ((await loadState({ blogs: 1 })).blogs ?? []).filter((item) => item.published);
 }
 
-export function getPublishedBlog(slug: string): BlogPost | null {
+export async function getPublishedBlog(slug: string): Promise<BlogPost | null> {
   if (!/^[a-z0-9-]{1,80}$/.test(slug)) return null;
-  const row = open()
-    .prepare("SELECT id, slug, title, excerpt, body, cover, author, date, published FROM blogs WHERE slug = ? AND published = 1")
-    .get(slug);
-  return row ? mapBlog(row) : null;
+  return (await getPublishedBlogs()).find((item) => item.slug === slug) ?? null;
 }
 
-export function getPublishedNotice(id: string): Notice | null {
+export async function getPublishedNotice(id: string): Promise<Notice | null> {
   if (!safeId(id)) return null;
-  const row = open()
-    .prepare("SELECT id, title, body, date, published FROM notices WHERE id = ? AND published = 1")
-    .get(id);
-  return row ? mapNotice(row) : null;
+  return (await getPublishedNotices()).find((item) => item.id === id) ?? null;
 }
 
-export function getPublicMedia(): MediaItem[] {
-  return open()
-    .prepare("SELECT id, name, folder, size, url, private FROM media WHERE private = 0 AND url != '' ORDER BY sort ASC")
-    .all()
-    .map(mapMedia);
+export async function getPublicMedia(): Promise<MediaItem[]> {
+  return ((await loadState({ media: 1 })).media ?? [])
+    .filter((item) => !item.private && item.url)
+    .map((item) => withoutStored(item));
 }
 
-export function getDistricts(): District[] {
-  return open()
-    .prepare("SELECT id, name, office, contact, phone, members FROM districts ORDER BY sort ASC")
-    .all()
-    .map(mapDistrict);
+export async function getDistricts(): Promise<District[]> {
+  return (await loadState({ districts: 1 })).districts ?? [];
 }
 
-export function getVisibleAccounts(): BankAccount[] {
-  return open()
-    .prepare(
-      "SELECT id, bank, branch, account_name, account_number, account_type, visible FROM accounts WHERE visible = 1 ORDER BY sort ASC",
-    )
-    .all()
-    .map(mapAccount);
+export async function getVisibleAccounts(): Promise<BankAccount[]> {
+  return ((await loadState({ accounts: 1 })).accounts ?? []).filter((item) => item.visible);
 }
 
-export function getPage(slug: string): PageContent | null {
+export async function getPage(slug: string): Promise<PageContent | null> {
   if (!/^[a-z0-9-]{1,40}$/.test(slug)) return null;
-  const row = open().prepare("SELECT id, slug, title, body FROM pages WHERE slug = ?").get(slug);
-  return row ? mapPage(row) : null;
+  return ((await loadState({ pages: 1 })).pages ?? []).find((item) => item.slug === slug) ?? null;
 }
 
-export function publicCounts() {
-  const db = open();
-  const total = db.prepare("SELECT COALESCE(SUM(amount), 0) AS n FROM donations WHERE status = 'received'").get();
-  const active = db.prepare("SELECT COUNT(*) AS n FROM members WHERE status = 'active'").get();
-  const districts = db.prepare("SELECT COUNT(*) AS n FROM districts").get();
+export async function publicCounts() {
+  const doc = await loadState({ donations: 1, members: 1, districts: 1 });
+  const donationTotal = (doc.donations ?? [])
+    .filter((item) => item.status === "received")
+    .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   return {
-    donationTotal: num(total?.n),
-    activeMembers: num(active?.n),
-    districtCount: num(districts?.n),
+    donationTotal,
+    activeMembers: (doc.members ?? []).filter((item) => item.status === "active").length,
+    districtCount: (doc.districts ?? []).length,
   };
 }
 
-export function getAdmin(): AdminAuth {
-  const row = open().prepare("SELECT email, salt, password_hash FROM admin WHERE id = 1").get();
-  if (!row) throw new Error("অ্যাডমিন নেই");
-  return { email: str(row.email), salt: str(row.salt), passwordHash: str(row.password_hash) };
+export async function getAdmin(): Promise<AdminAuth> {
+  const { admin } = await loadState({ admin: 1 });
+  if (!admin) throw new Error("অ্যাডমিন নেই");
+  return admin;
 }
 
-export function saveSession(tokenHash: string, email: string, expires: number) {
-  const db = open();
-  db.prepare("INSERT INTO sessions (token_hash, email, expires) VALUES (?, ?, ?)").run(tokenHash, email, expires);
-  db.prepare("DELETE FROM sessions WHERE expires < ?").run(Date.now());
+export async function saveSession(tokenHash: string, email: string, expires: number) {
+  await connectToDatabase();
+  await SessionModel.create({ token_hash: tokenHash, email, expires });
+  await SessionModel.deleteMany({ expires: { $lt: Date.now() } });
 }
 
-export function findSession(tokenHash: string) {
-  const row = open().prepare("SELECT email, expires FROM sessions WHERE token_hash = ?").get(tokenHash);
+export async function findSession(tokenHash: string) {
+  await connectToDatabase();
+  const row = await SessionModel.findOne({ token_hash: tokenHash }).lean();
   if (!row) return null;
-  return { email: str(row.email), expires: num(row.expires) };
+  return { email: row.email, expires: row.expires };
 }
 
-export function deleteSession(tokenHash: string) {
-  open().prepare("DELETE FROM sessions WHERE token_hash = ?").run(tokenHash);
+export async function deleteSession(tokenHash: string) {
+  await connectToDatabase();
+  await SessionModel.deleteOne({ token_hash: tokenHash });
 }
 
-export function revokeAllSessions() {
-  open().exec("DELETE FROM sessions");
+export async function revokeAllSessions() {
+  await connectToDatabase();
+  await SessionModel.deleteMany({});
 }
 
-export function privateUploadsDir() {
-  const dir = path.join(process.cwd(), "data", "uploads");
-  mkdirSync(dir, { recursive: true });
-  return dir;
-}
-
-export function mediaRecord(id: string) {
+export async function mediaRecord(id: string) {
   if (!safeId(id)) return null;
-  const row = open().prepare("SELECT private, url, stored FROM media WHERE id = ?").get(id);
-  if (!row) return null;
-  return { private: yes(row.private), url: str(row.url), stored: str(row.stored) };
+  const item = ((await loadState({ media: 1 })).media ?? []).find((m) => m.id === id);
+  if (!item) return null;
+  return { private: Boolean(item.private), url: item.url, stored: item.stored ?? "" };
 }
 
-export function unlinkStored(stored: string) {
-  if (!stored) return;
-  const name = path.basename(stored);
-  if (!/^[A-Za-z0-9-]+\.(jpg|jpeg|png|webp|gif)$/.test(name)) return;
-  const target = path.join(process.cwd(), "data", "uploads", name);
-  try {
-    unlinkSync(target);
-  } catch {
-    /* already gone */
-  }
+const STORED_NAME = /^[A-Za-z0-9-]{1,80}\.(jpg|jpeg|png|webp|gif)$/;
+
+export async function saveMediaFile(stored: string, data: Buffer) {
+  if (!STORED_NAME.test(stored)) throw new Error("ফাইলের নাম সঠিক নয়");
+  await connectToDatabase();
+  await MediaFile.create({ _id: stored, data });
+}
+
+export async function readMediaFile(stored: string): Promise<Buffer | null> {
+  if (!STORED_NAME.test(stored)) return null;
+  await connectToDatabase();
+  const file = await MediaFile.findById(stored);
+  return file ? Buffer.from(file.data) : null;
+}
+
+export async function deleteMediaFile(stored: string) {
+  if (!STORED_NAME.test(stored)) return;
+  await connectToDatabase();
+  await MediaFile.deleteOne({ _id: stored });
 }

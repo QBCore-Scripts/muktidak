@@ -10,7 +10,7 @@ type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPublishedBlog(slug);
+  const post = await getPublishedBlog(slug);
   const title = post?.title ?? "ব্লগ";
   return {
     title,
@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = getPublishedBlog(slug);
+  const post = await getPublishedBlog(slug);
   if (!post) notFound();
-  const settings = getSettings();
+  const settings = await getSettings();
   const author = post.author || settings.shortName;
   const origin = siteUrl();
   const jsonLd = {

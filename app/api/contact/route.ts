@@ -25,7 +25,7 @@ export async function POST(request: Request) {
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return Response.json({ error: "ইমেইল সঠিক নয়" }, { status: 400 });
   }
-  updateDb((db) => {
+  await updateDb((db) => {
     db.messages.unshift({
       id: newId(),
       name,
@@ -45,6 +45,6 @@ export async function GET() {
   const session = await getSession();
   if (!session) return Response.json({ error: "প্রবেশ করা প্রয়োজন" }, { status: 401 });
   return Response.json(
-    readDb().messages.map(({ name, phone, email, body, date, read, id }) => ({ id, name, phone, email, body, date, read })),
+    (await readDb()).messages.map(({ name, phone, email, body, date, read, id }) => ({ id, name, phone, email, body, date, read })),
   );
 }

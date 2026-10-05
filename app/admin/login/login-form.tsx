@@ -41,7 +41,7 @@ export function LoginForm() {
             <Mark />
             <div className="min-w-0">
               <p className="font-semibold">অ্যাডমিন প্যানেল</p>
-              <p className="truncate text-sm text-paper/80">{siteNameBn}</p>
+              <p className="truncate font-heading text-base text-paper/90">{siteNameBn}</p>
               <p className="truncate text-[10px] tracking-[0.14em] text-paper/55">{siteNameEn}</p>
             </div>
           </div>
