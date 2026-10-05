@@ -24,5 +24,5 @@ export const siteKeywords = [
 
 export function siteUrl() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
-  return configured || "https://muktidak71.org";
+  return configured || "https://bdmuktirdak71.org";
 }

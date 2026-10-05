@@ -43,11 +43,20 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: `${siteNameBn} · ${siteNameEn}`,
       title,
       description,
+      images: [
+        {
+          url: "/og.jpg",
+          width: 1200,
+          height: 630,
+          alt: en ? "Bangladesh Muktir Dak 71 — with the people, politics of the field" : "মানুষের পাশে, মাঠের রাজনীতি",
+        },
+      ],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title,
       description,
+      images: ["/og.jpg"],
     },
     robots: { index: true, follow: true },
   };

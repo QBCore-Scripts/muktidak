@@ -14,6 +14,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     name: siteNameBn,
     alternateName: [siteNameEn, "Muktir Dak 71", settings.shortName],
     url: origin,
+    logo: `${origin}/logo.svg`,
+    image: `${origin}/og.jpg`,
     description: siteDescription,
     email: settings.email,
     telephone: settings.phone,

@@ -1,9 +1,11 @@
 export function Mark({ className = "h-10 w-10" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
-      <circle cx="24" cy="24" r="24" fill="#1b7a4d" />
-      <circle cx="24" cy="24" r="18.5" fill="none" stroke="#f6f3ee" strokeWidth="1.4" />
-      <path d="M24 11.5c1.8 5.2 8.2 7.2 8.2 13.2a8.2 8.2 0 1 1-16.4 0c0-6 6.4-8 8.2-13.2z" fill="#f6f3ee" />
+    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+      <circle cx="32" cy="32" r="32" fill="#f4efe6" />
+      <circle cx="32" cy="32" r="28.25" fill="#114236" />
+      <circle cx="32" cy="32" r="17.6" fill="#d32622" />
+      <path d="M23.2 24.8h11.4L27.2 39.2" fill="none" stroke="#fff" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M37.6 28.4 40.8 24.8v14.4" fill="none" stroke="#fff" strokeWidth="4.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
