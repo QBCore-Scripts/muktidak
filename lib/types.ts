@@ -8,6 +8,7 @@ export type Settings = {
   phone: string;
   email: string;
   address: string;
+  logoUrl: string;
   copy: SiteCopy;
 };
 
@@ -65,6 +66,7 @@ export type BlogPost = {
   body: string;
   cover: string;
   author: string;
+  category: string;
   date: string;
   published: boolean;
 };

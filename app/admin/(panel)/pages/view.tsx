@@ -1,8 +1,24 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
 import type { Activity, PageContent } from "@/lib/types";
+
+const pageNames: Record<string, string> = {
+  home: "প্রচ্ছদের নিচের লেখা",
+  about: "পরিচিতি",
+  vision: "ভিশন",
+  activities: "কার্যক্রম",
+  manifesto: "ঘোষণাপত্র",
+  objectives: "লক্ষ্য এবং উদ্দেশ্য",
+  committee: "কেন্দ্রীয় কার্যনির্বাহী সংসদ",
+};
+
+const requiredPages = [
+  { slug: "manifesto", title: "ঘোষণাপত্র" },
+  { slug: "objectives", title: "লক্ষ্য এবং উদ্দেশ্য" },
+  { slug: "committee", title: "কেন্দ্রীয় কার্যনির্বাহী সংসদ" },
+];
 
 export function PagesView({ pages: initialPages, activities: initialActivities }: { pages: PageContent[]; activities: Activity[] }) {
   const [pages, setPages] = useState(initialPages);
@@ -12,14 +28,27 @@ export function PagesView({ pages: initialPages, activities: initialActivities }
   const [saved, setSaved] = useState(false);
 
   async function load() {
-    const [pageRows, activityRows] = await Promise.all([
-      adminFetch<PageContent[]>("/api/admin/pages"),
-      adminFetch<Activity[]>("/api/admin/activities"),
-    ]);
+    let pageRows = await adminFetch<PageContent[]>("/api/admin/pages");
+    for (const item of requiredPages) {
+      if (pageRows.some((page) => page.slug === item.slug)) continue;
+      await adminFetch("/api/admin/pages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...item, body: "" }),
+      });
+    }
+    if (requiredPages.some((item) => !pageRows.some((page) => page.slug === item.slug))) {
+      pageRows = await adminFetch<PageContent[]>("/api/admin/pages");
+    }
+    const activityRows = await adminFetch<Activity[]>("/api/admin/activities");
     setPages(pageRows);
     setActivities(activityRows);
     setCurrent((value) => value || pageRows[0]?.id || "");
   }
+
+  useEffect(() => {
+    load().catch(() => setError("পাতা লোড হয়নি"));
+  }, []);
 
   const page = pages.find((item) => item.id === current);
 
@@ -66,11 +95,41 @@ export function PagesView({ pages: initialPages, activities: initialActivities }
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h1 className="text-2xl font-semibold text-forest">পেজ কনটেন্ট</h1>
+      <h1 className="text-2xl font-semibold text-forest">পেজের লেখা</h1>
+      <p className="mt-2 text-sm leading-relaxed text-muted">প্রতিটি পাতার শিরোনাম ও নিচের অনুচ্ছেদ এখান থেকে বদলায়। নতুন পাতা যোগ করলে সেটি সাইটে নিজের লিংকে খুলবে এবং ফুটারে দেখা যাবে। প্রচ্ছদের ওপরের বড় লাইন «সেটিংস» থেকে।</p>
+      <form
+        className="mt-5 grid gap-2 rounded-2xl border border-line bg-paper p-5"
+        onSubmit={async (event) => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          try {
+            const created = await adminFetch<PageContent>("/api/admin/pages", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(Object.fromEntries(new FormData(form).entries())),
+            });
+            form.reset();
+            setError("");
+            setSaved(true);
+            await load();
+            setCurrent(created.id);
+          } catch (err) {
+            setSaved(false);
+            setError(err instanceof Error ? err.message : "পাতা যোগ হয়নি");
+          }
+        }}
+      >
+        <h2 className="font-semibold">নতুন পাতা</h2>
+        <input name="title" required placeholder="শিরোনাম" className="field" aria-label="নতুন পাতার শিরোনাম" />
+        <input name="slug" required placeholder="লিংক, যেমন history" pattern="[a-z0-9-]{1,40}" className="field" aria-label="পাতার লিংক" />
+        <textarea name="body" rows={4} placeholder="লেখা" className="field" aria-label="নতুন পাতার লেখা" />
+        <p className="text-xs text-muted">লিংকে শুধু ইংরেজি ছোট হাতের অক্ষর, সংখ্যা ও হাইফেন। যেমন history দিলে ঠিকানা হবে /history</p>
+        <button className="justify-self-start rounded-lg bg-forest px-4 py-2.5 text-sm font-semibold text-paper">পাতা যোগ</button>
+      </form>
       <div className="mt-5 flex flex-wrap gap-2">
         {pages.map((item) => (
           <button key={item.id} type="button" onClick={() => { setCurrent(item.id); setSaved(false); }} className={`rounded-full px-3 py-1.5 text-sm ${item.id === current ? "bg-forest text-paper" : "bg-paper border border-line"}`}>
-            {item.slug}
+            {pageNames[item.slug] || item.title || item.slug}
           </button>
         ))}
       </div>

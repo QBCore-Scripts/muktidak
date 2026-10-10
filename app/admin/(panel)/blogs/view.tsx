@@ -13,12 +13,13 @@ type Draft = {
   body: string;
   cover: string;
   author: string;
+  category: string;
   date: string;
   published: boolean;
 };
 
 function blank(): Draft {
-  return { id: null, title: "", slug: "", excerpt: "", body: "", cover: "", author: "", date: todayISO(), published: true };
+  return { id: null, title: "", slug: "", excerpt: "", body: "", cover: "", author: "", category: "", date: todayISO(), published: true };
 }
 
 function fromPost(post: BlogPost): Draft {
@@ -30,18 +31,22 @@ function fromPost(post: BlogPost): Draft {
     body: post.body,
     cover: post.cover,
     author: post.author,
+    category: post.category || "",
     date: post.date,
     published: post.published,
   };
 }
 
-export function BlogsView({ initial, media }: { initial: BlogPost[]; media: MediaItem[] }) {
+export function BlogsView({ initial, media: initialMedia }: { initial: BlogPost[]; media: MediaItem[] }) {
   const [rows, setRows] = useState(initial);
+  const [media, setMedia] = useState(initialMedia);
   const [draft, setDraft] = useState<Draft>(blank);
   const [query, setQuery] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [pending, setPending] = useState(false);
+
+  const categories = useMemo(() => [...new Set(rows.map((item) => item.category).filter(Boolean))], [rows]);
 
   const visible = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -76,6 +81,7 @@ export function BlogsView({ initial, media }: { initial: BlogPost[]; media: Medi
       body: draft.body,
       cover: draft.cover,
       author: draft.author,
+      category: draft.category,
       date: draft.date,
       published: draft.published,
     };
@@ -135,7 +141,7 @@ export function BlogsView({ initial, media }: { initial: BlogPost[]; media: Medi
                 className={`w-full rounded-xl border px-3 py-3 text-left ${draft.id === item.id ? "border-forest bg-paper" : "border-line bg-paper/70"}`}
               >
                 <p className="line-clamp-2 text-sm font-medium">{item.title || "শিরোনামহীন"}</p>
-                <p className="mt-1 text-xs text-muted">{formatDate(item.date)} · {item.published ? "প্রকাশিত" : "খসড়া"}</p>
+                <p className="mt-1 text-xs text-muted">{[item.category, formatDate(item.date), item.published ? "প্রকাশিত" : "খসড়া"].filter(Boolean).join(" · ")}</p>
               </button>
             </li>
           ))}
@@ -150,6 +156,13 @@ export function BlogsView({ initial, media }: { initial: BlogPost[]; media: Medi
         <label className="grid gap-1 text-sm font-medium">
           স্লাগ
           <input className="field" value={draft.slug} onChange={(event) => set("slug", event.target.value)} placeholder="field-notes — খালি রাখলে নিজে বানবে" aria-label="স্লাগ" />
+        </label>
+        <label className="grid gap-1 text-sm font-medium">
+          ক্যাটাগরি
+          <input className="field" list="blog-categories" value={draft.category} onChange={(event) => set("category", event.target.value)} placeholder="নতুন নাম লিখলেই নতুন ক্যাটাগরি হবে" />
+          <datalist id="blog-categories">
+            {categories.map((item) => <option key={item} value={item} />)}
+          </datalist>
         </label>
         <label className="grid gap-1 text-sm font-medium">
           সংক্ষিপ্ত
@@ -178,7 +191,29 @@ export function BlogsView({ initial, media }: { initial: BlogPost[]; media: Medi
               <option key={item.id} value={item.url}>{item.name}</option>
             ))}
           </select>
-          <input className="field" value={draft.cover} onChange={(event) => set("cover", event.target.value)} placeholder="/media/eid.svg" aria-label="কভার ঠিকানা" />
+          <input className="field" value={draft.cover} onChange={(event) => set("cover", event.target.value)} placeholder="অথবা গ্যালারির লিংক" aria-label="কভার ঠিকানা" />
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp,image/gif"
+            className="text-sm"
+            aria-label="নতুন কভার ছবি"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              event.target.value = "";
+              if (!file) return;
+              const body = new FormData();
+              body.set("file", file);
+              body.set("folder", draft.category || "ব্লগ");
+              try {
+                const item = await adminFetch<MediaItem>("/api/admin/media", { method: "POST", body });
+                set("cover", item.url);
+                setMedia((current) => [item, ...current]);
+                setError("");
+              } catch (err) {
+                setError(err instanceof Error ? err.message : "ছবি আপলোড হয়নি");
+              }
+            }}
+          />
         </label>
         {draft.cover ? (
           // eslint-disable-next-line @next/next/no-img-element

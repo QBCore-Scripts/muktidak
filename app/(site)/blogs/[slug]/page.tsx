@@ -46,7 +46,7 @@ export default async function BlogPostPage({ params }: Props) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={post.cover} alt="" className="mt-6 aspect-[16/8] w-full rounded-2xl object-cover" />
       ) : null}
-      <p className="mt-6 text-sm text-muted">{formatDate(post.date, locale)} · {author}</p>
+      <p className="mt-6 text-sm text-muted">{[post.category, formatDate(post.date, locale), author].filter(Boolean).join(" · ")}</p>
       <h1 className="mt-2 text-3xl font-semibold text-forest md:text-4xl">{post.title}</h1>
       {post.excerpt ? <p className="mt-4 text-lg leading-relaxed text-muted">{post.excerpt}</p> : null}
       <div className="mt-6 grid gap-4 leading-relaxed">

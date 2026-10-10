@@ -2,7 +2,7 @@ export const siteNameBn = "বাংলাদেশ মুক্তির ডা
 export const siteNameEn = "Bangladesh Muktir Dak 71";
 
 export const siteDescription =
-  "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) জনগণের রাজনৈতিক দল। মাঠের রাজনীতি, জেলা দপ্তর ও খোলা হিসাব।";
+  "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) গণতন্ত্র পুনরুদ্ধার ও মুজিববাদ প্রতিষ্ঠার লক্ষ্যে গড়া জনগণের রাজনৈতিক দল — মাঠের সংগঠন, জেলা দপ্তর ও খোলা হিসাবের রাজনীতি।";
 
 export const siteKeywords = [
   siteNameBn,

@@ -1,10 +1,14 @@
 import Link from "next/link";
 import type { Locale, UiText } from "@/lib/i18n";
+import { getPages } from "@/lib/db";
 import type { Settings } from "@/lib/types";
 import { siteNameBn, siteNameEn } from "@/lib/seo";
 import { Mark } from "./Mark";
 
-export function Footer({ settings, t, locale }: { settings: Settings; t: UiText; locale: Locale }) {
+const listed = new Set(["home", "manifesto", "objectives", "committee", "about", "activities", "blogs", "notices", "donate"]);
+
+export async function Footer({ settings, t, locale }: { settings: Settings; t: UiText; locale: Locale }) {
+  const extra = (await getPages()).filter((page) => page.slug && page.title && !listed.has(page.slug));
   return (
     <footer className="mt-16 text-paper">
       <svg viewBox="0 0 1440 28" preserveAspectRatio="none" className="block h-5 w-full text-forest-deep" aria-hidden="true">
@@ -21,7 +25,7 @@ export function Footer({ settings, t, locale }: { settings: Settings; t: UiText;
         <div className={`grid gap-10 border-t border-white/10 pt-8 md:grid-cols-3 ${settings.copy.footerLine ? "mt-10" : ""}`}>
           <div>
             <div className="flex items-center gap-3">
-              <Mark className="h-9 w-9" />
+              <Mark src={settings.logoUrl} className="h-12 w-12" />
               <span>
                 <p className="font-heading text-lg">{settings.shortName}</p>
                 <p className="text-[11px] tracking-[0.12em] text-paper/55">{locale === "en" ? siteNameBn : siteNameEn}</p>
@@ -32,11 +36,17 @@ export function Footer({ settings, t, locale }: { settings: Settings; t: UiText;
           <div>
             <p className="text-xs font-semibold tracking-wide text-paper/50">{t.footerPages}</p>
             <ul className="mt-4 grid gap-2.5 text-sm text-paper/85">
+              <li><Link href="/manifesto" className="hover:text-white">{settings.copy.linkManifesto}</Link></li>
+              <li><Link href="/objectives" className="hover:text-white">{settings.copy.linkObjectives}</Link></li>
+              <li><Link href="/committee" className="hover:text-white">{settings.copy.linkCommittee}</Link></li>
               <li><Link href="/about" className="hover:text-white">{settings.copy.navAbout}</Link></li>
               <li><Link href="/activities" className="hover:text-white">{settings.copy.navActivities}</Link></li>
               <li><Link href="/blogs" className="hover:text-white">{settings.copy.navBlogs}</Link></li>
               <li><Link href="/notices" className="hover:text-white">{settings.copy.navNotices}</Link></li>
               <li><Link href="/donate" className="hover:text-white">{settings.copy.navDonate}</Link></li>
+              {extra.map((page) => (
+                <li key={page.id}><Link href={`/${page.slug}`} className="hover:text-white">{page.title}</Link></li>
+              ))}
             </ul>
           </div>
           <div>

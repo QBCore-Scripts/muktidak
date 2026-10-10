@@ -34,19 +34,30 @@ const groups: { title: string; fields: CopyField[] }[] = [
     ],
   },
   {
-    title: "প্রচ্ছদ",
+    title: "প্রচ্ছদের ওপরের অংশ",
     fields: [
-      ["homeDate", "তারিখ"],
-      ["homeFreedom", "মুক্তির লাইন"],
-      ["quoteLabel", "উক্তির শিরোনাম"],
-      ["homeDonate", "দান বোতাম"],
-      ["homeAbout", "পরিচিতি বোতাম"],
-      ["homeWorkTitle", "কাজের শিরোনাম"],
+      ["heroTitle", "বড় শিরোনাম", true],
+      ["heroPhilosophy", "সবুজ লাইন"],
+      ["heroPillars", "চার মূলনীতি — প্রতি লাইনে একটি", true],
+      ["linkManifesto", "কার্ড: ঘোষণাপত্র"],
+      ["linkObjectives", "কার্ড: লক্ষ্য এবং উদ্দেশ্য"],
+      ["linkCommittee", "কার্ড: কেন্দ্রীয় কার্যনির্বাহী সংসদ"],
+      ["highlightKicker", "হাইলাইট ১ — ছোট লাইন (তারিখ)"],
+      ["highlightOne", "হাইলাইট ১ — বড় লাইন", true],
+      ["highlightTwo", "হাইলাইট ২", true],
+      ["highlightThree", "হাইলাইট ৩"],
+      ["heroVideo", "ইউটিউব ভিডিও কোড"],
+    ],
+  },
+  {
+    title: "প্রচ্ছদের নিচের অংশ",
+    fields: [
+      ["homeWorkTitle", "কর্মসূচির শিরোনাম"],
       ["homeNoticeTitle", "নোটিশের শিরোনাম"],
-      ["homeNoticesLink", "সব দেখুন"],
+      ["homeNoticesLink", "নোটিশ — সব দেখুন"],
       ["homeBlogTitle", "ব্লগের শিরোনাম"],
-      ["homeBlogsLink", "সব লেখা"],
-      ["homeNote", "নিচের নোট", true],
+      ["homeBlogsLink", "ব্লগ — সব লেখা"],
+      ["homeNote", "নোটিশ বক্সের নিচের নোট", true],
     ],
   },
   {
@@ -114,10 +125,10 @@ export function SettingsView({ initial, email }: { initial: Settings; email: str
   const current = settings;
 
   const fields: [TextKey, string][] = [
-    ["name", "সাইটের নাম"],
-    ["shortName", "সংক্ষিপ্ত নাম"],
-    ["tagline", "ট্যাগলাইন"],
-    ["quote", "উক্তি"],
+    ["name", "সাইটের নাম (হেডারে)"],
+    ["shortName", "সংক্ষিপ্ত নাম (ফুটারে)"],
+    ["tagline", "ফুটারের ছোট বিবরণ"],
+    ["quote", "পরিচিতি পাতার উক্তি"],
     ["phone", "ফোন"],
     ["email", "ইমেইল"],
     ["address", "ঠিকানা"],
@@ -131,13 +142,40 @@ export function SettingsView({ initial, email }: { initial: Settings; email: str
     <form onSubmit={save} className="mx-auto grid max-w-2xl gap-4">
       <h1 className="text-2xl font-semibold text-forest">সেটিংস</h1>
       <p className="text-sm leading-relaxed text-muted">
-        এখান থেকে সাইটের নাম, মেনু, প্রচ্ছদ, দান, গ্যালারি, নোটিশ, জেলা ও ফুটারের লেখা বদলায়। পাতার মূল লেখা «পেজ কনটেন্ট» থেকে, নোটিশ/ছবি/সদস্য/দান/অ্যাকাউন্ট/জেলা নিজ নিজ মেনু থেকে।
+        এখান থেকে নাম, লোগো, মেনু, প্রচ্ছদের বড় লেখা, দান, গ্যালারি, নোটিশ, জেলা ও ফুটার বদলায়। পাতার লম্বা লেখা «পেজ» থেকে। নোটিশ, ব্লগ, ছবি, সদস্য, দান, অ্যাকাউন্ট ও জেলা নিজ নিজ মেনু থেকে। বদলানোর পর নিচে «সংরক্ষণ করুন» চাপুন।
       </p>
       <label className="grid gap-1 text-sm font-medium">
         অ্যাডমিন ইমেইল
         <input className="field" type="email" value={adminEmail} onChange={(event) => setAdminEmail(event.target.value)} autoComplete="username" />
       </label>
       <p className="text-xs text-muted">ইমেইল বা পাসওয়ার্ড বদলালে আবার প্রবেশ করতে হবে। তখন বর্তমান পাসওয়ার্ড দিন।</p>
+      <fieldset className="grid gap-3 rounded-2xl border border-line bg-paper p-4">
+        <legend className="px-1 text-sm font-semibold">লোগো</legend>
+        <p className="text-xs leading-relaxed text-muted">হেডার, ফুটার, প্রচ্ছদ, ফ্যাভিকনের জায়গায় সাইটের লোগো। নতুন ছবি বাছলে আগে আপলোড হবে, তারপর নিচে সংরক্ষণ চাপুন। খালি রাখলে আগের লোগো থাকে।</p>
+        <img src={current.logoUrl || "/logo.png"} alt="" className="h-20 w-20 rounded-xl bg-forest object-contain" />
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/gif"
+          className="text-sm"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            event.target.value = "";
+            if (!file) return;
+            const body = new FormData();
+            body.set("file", file);
+            body.set("folder", "লোগো");
+            try {
+              const item = await adminFetch<{ url: string }>("/api/admin/media", { method: "POST", body });
+              setSettings({ ...current, logoUrl: item.url });
+              setError("");
+              setMessage("লোগো বসানো হয়েছে। এখন সংরক্ষণ করুন।");
+            } catch (err) {
+              setMessage("");
+              setError(err instanceof Error ? err.message : "লোগো আপলোড হয়নি");
+            }
+          }}
+        />
+      </fieldset>
       {fields.map(([key, label]) => (
         <label key={key} className="grid gap-1 text-sm font-medium">
           {label}

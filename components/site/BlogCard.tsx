@@ -22,6 +22,7 @@ export function BlogCard({ post, index = 0, locale }: { post: BlogPost; index?: 
         </div>
         <CardHeader className="pt-5">
           <div className="flex flex-wrap items-center gap-2">
+            {post.category ? <Badge variant="outline">{post.category}</Badge> : null}
             <Badge variant="secondary">{formatDate(post.date, locale)}</Badge>
             {post.author ? <span className="text-xs text-muted-foreground">{post.author}</span> : null}
           </div>

@@ -16,7 +16,7 @@ export function MediaView({ initial }: { initial: MediaItem[] }) {
     setRows(await adminFetch<MediaItem[]>("/api/admin/media"));
   }
 
-  const folders = useMemo(() => ["সব", ...new Set(rows.map((item) => item.folder))], [rows]);
+  const folders = useMemo(() => ["সব", ...new Set(["কার্যক্রম", "অনুষ্ঠান", "ব্লগ", ...rows.map((item) => item.folder)].filter(Boolean))], [rows]);
   const visible = rows.filter((item) => {
     const matchesFolder = folder === "সব" || item.folder === folder;
     return matchesFolder && item.name.toLowerCase().includes(query.trim().toLowerCase());
@@ -57,14 +57,12 @@ export function MediaView({ initial }: { initial: MediaItem[] }) {
   return (
     <div className="mx-auto max-w-6xl">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold text-forest">ছবি ও ডকুমেন্ট</h1>
+        <h1 className="text-2xl font-semibold text-forest">ছবি ও ক্যাটাগরি</h1>
         <form onSubmit={upload} className="flex flex-wrap items-center gap-2">
-          <input value={newFolder} onChange={(e) => setNewFolder(e.target.value)} placeholder="নতুন ফোল্ডার" className="field w-40" aria-label="নতুন ফোল্ডার" />
-          <select name="folder" className="field w-36" aria-label="ফোল্ডার" defaultValue="কার্যক্রম">
-            <option>কার্যক্রম</option>
-            <option>অনুষ্ঠান</option>
-            <option>সুরক্ষিত</option>
+          <select name="folder" className="field w-40" aria-label="ক্যাটাগরি" defaultValue="কার্যক্রম">
+            {folders.filter((item) => item !== "সব").map((item) => <option key={item}>{item}</option>)}
           </select>
+          <input value={newFolder} onChange={(e) => setNewFolder(e.target.value)} placeholder="নতুন ক্যাটাগরি" className="field w-44" aria-label="নতুন ক্যাটাগরি" />
           <input name="file" type="file" accept="image/*" required className="text-sm" aria-label="ছবি" />
           <label className="flex items-center gap-1 text-sm">
             <input type="checkbox" name="private" value="true" /> সুরক্ষিত
@@ -108,7 +106,7 @@ export function MediaView({ initial }: { initial: MediaItem[] }) {
                 }}
               >
                 <input name="name" defaultValue={item.name} className="field" aria-label="ফাইলের নাম" />
-                <input name="folder" defaultValue={item.folder} className="field" aria-label="ফোল্ডার" />
+                <input name="folder" defaultValue={item.folder} className="field" aria-label="ক্যাটাগরি" list="media-categories" />
                 <button className="justify-self-start text-sm font-medium text-leaf">নাম সংরক্ষণ</button>
               </form>
               <p className="mt-2 text-muted">{formatSize(item.size)}{item.private ? " · সুরক্ষিত" : ""}</p>
@@ -120,6 +118,9 @@ export function MediaView({ initial }: { initial: MediaItem[] }) {
           </article>
         ))}
       </div>
+      <datalist id="media-categories">
+        {folders.filter((item) => item !== "সব").map((item) => <option key={item} value={item} />)}
+      </datalist>
       <p className="mt-6 rounded-xl bg-warn px-4 py-3 text-sm leading-relaxed text-donate">
         NID স্ক্যান এই গ্যালারিতে রাখবেন না। সুরক্ষিত চিহ্ন দিলেও ফাইল সার্ভারে থাকে — সংবেদনশীল নথি আলাদা সংরক্ষণ করুন। পাবলিক গ্যালারিতে শুধু অ-সুরক্ষিত ছবি দেখা যায়।
       </p>

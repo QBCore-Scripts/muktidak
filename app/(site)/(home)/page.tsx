@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { BlogCard } from "@/components/site/BlogCard";
 import { CountUp } from "@/components/site/CountUp";
+import { Mark } from "@/components/site/Mark";
 import { NoticeRow } from "@/components/site/NoticeRow";
 import { Reveal } from "@/components/site/Reveal";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +22,11 @@ const tiles = [
   { src: "/history/victory.jpg", tint: "tile-red", top: false },
 ];
 
-const heroVideo = "Wh0q8vdH-ro";
+const highlightArt = [
+  { src: "/history/victory.jpg", tint: "tile-red", top: false },
+  { src: "/history/fighters.jpg", tint: "tile-green", top: true },
+  { src: "/history/speech.jpg", tint: "tile-blue", top: false },
+];
 
 export default async function HomePage() {
   const { locale, t, settings } = await getSite();
@@ -33,7 +37,19 @@ export default async function HomePage() {
   const notices = (await getPublishedNotices()).slice(0, 5);
   const blogs = (await getPublishedBlogs()).slice(0, 3);
   const points = visionCards(copy.visionPoints).slice(0, 3);
-  const [lead, rest] = paragraphs(home.body);
+  const body = paragraphs(home.body);
+  const pillars = copy.heroPillars.split(/\n/).map((item) => item.trim()).filter(Boolean);
+  const heroVideo = /^[\w-]{6,20}$/.test(copy.heroVideo) ? copy.heroVideo : "Wh0q8vdH-ro";
+  const sections = [
+    { href: "/manifesto", label: copy.linkManifesto },
+    { href: "/objectives", label: copy.linkObjectives },
+    { href: "/committee", label: copy.linkCommittee },
+  ];
+  const spotlight = [
+    { kicker: copy.highlightKicker, title: copy.highlightOne },
+    { kicker: "", title: copy.highlightTwo },
+    { kicker: "", title: copy.highlightThree },
+  ];
   const stats = [
     { value: counts.donationTotal, prefix: "৳", label: t.statDonations },
     { value: counts.activeMembers, prefix: "", label: t.statMembers },
@@ -56,44 +72,62 @@ export default async function HomePage() {
         <div className="hero-shade absolute inset-0 -z-20" aria-hidden="true" />
         <span className="hero-sun absolute -z-10" aria-hidden="true" />
 
-        <div className="mx-auto grid min-h-[min(82vh,46rem)] max-w-6xl content-center gap-10 px-4 pb-40 pt-16 md:pb-44 lg:grid-cols-[1.25fr_.75fr] lg:items-end">
-          <div className="min-w-0">
-            {copy.homeDate ? (
-              <Reveal index={0}>
-                <Badge className="glass h-7 rounded-full px-3 text-sm font-normal text-white">
-                  <span className="h-1.5 w-1.5 rounded-full bg-destructive" aria-hidden="true" />
-                  {copy.homeDate}
-                </Badge>
-              </Reveal>
-            ) : null}
-            <Reveal index={1}>
-              <h1 className="mt-6 max-w-2xl text-6xl leading-[1.08] text-white [text-shadow:0_6px_30px_rgba(0,0,0,0.35)] md:text-7xl lg:text-8xl">
-                {home.title}
-              </h1>
-            </Reveal>
-            {copy.homeFreedom ? (
-              <Reveal index={2} className="mt-6 flex items-center gap-3">
-                <Separator className="bg-[#9fe0b9] data-horizontal:w-10" />
-                <p className="text-xl text-[#9fe0b9]">{copy.homeFreedom}</p>
-              </Reveal>
-            ) : null}
-            <Reveal index={3}>
-              <p className="mt-4 max-w-xl text-lg text-white/80">{lead}</p>
-            </Reveal>
-            <Reveal index={4} className="mt-9 flex flex-wrap gap-3">
-              <Link href="/donate" className={cn(buttonVariants({ variant: "donate", size: "xl" }), "group")}>
-                {copy.homeDonate}
-                <ArrowRight data-icon="inline-end" className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
-              </Link>
-              <Link href="/about" className={cn(buttonVariants({ variant: "outline", size: "xl" }), "glass border-white/20 bg-white/10 text-white hover:bg-white/20 hover:text-white")}>
-                {copy.homeAbout}
-              </Link>
-            </Reveal>
-          </div>
+        <div className="mx-auto flex min-h-[min(78vh,44rem)] max-w-4xl flex-col items-center justify-center px-4 pb-28 pt-16 text-center">
+          <Reveal index={0}>
+            <h1 className="text-3xl leading-[1.28] text-white [text-shadow:0_6px_30px_rgba(0,0,0,0.35)] sm:text-4xl md:text-5xl lg:text-6xl">
+              {copy.heroTitle}
+            </h1>
+          </Reveal>
+          <Reveal index={1} className="mt-6">
+            <p className="text-xl text-[#9fe0b9] md:text-2xl">{copy.heroPhilosophy}</p>
+          </Reveal>
+          <Reveal index={2}>
+            <ul className="mt-4 flex flex-wrap items-center justify-center text-lg text-white/90">
+              {pillars.map((item, index) => (
+                <li key={item} className="flex items-center">
+                  {index > 0 ? <span className="mx-3 h-1.5 w-1.5 rounded-full bg-[#9fe0b9]" aria-hidden="true" /> : null}
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </Reveal>
+          <Reveal index={3}>
+            <div className="mt-10" role="img" aria-label={settings.shortName}>
+              <Mark src={settings.logoUrl} priority className="mx-auto h-40 w-40 drop-shadow-[0_12px_30px_rgba(0,0,0,0.35)] md:h-48 md:w-48" />
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto -mt-24 max-w-6xl px-4">
+      <nav aria-label={copy.navHome} className="relative z-10 mx-auto -mt-16 grid max-w-6xl gap-3 px-4 sm:grid-cols-3">
+        {sections.map((item, index) => (
+          <Reveal key={item.href} index={index}>
+            <Link
+              href={item.href}
+              className="lift flex min-h-28 items-center justify-center rounded-2xl bg-white px-5 py-6 text-center shadow-[0_24px_50px_-24px_rgba(12,50,40,0.45)] ring-1 ring-forest/8 hover:ring-leaf/40"
+            >
+              <span className="font-heading text-2xl leading-snug text-forest md:text-3xl">{item.label}</span>
+            </Link>
+          </Reveal>
+        ))}
+      </nav>
+
+      <section aria-label={copy.highlightOne} className="mx-auto grid max-w-6xl gap-5 px-4 pt-10 sm:grid-cols-3">
+        {spotlight.map((item, index) => {
+          const art = highlightArt[index];
+          return (
+          <Reveal key={item.title} as="article" variant="zoom" index={index} className={`tile lift flex p-6 ${art.tint} ${art.top ? "tile-top items-start" : "items-end"}`}>
+            <Image src={art.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" />
+            <div className="w-full text-center">
+              {item.kicker ? <p className="text-sm font-medium tracking-wide text-[#9fe0b9]">{item.kicker}</p> : null}
+              <h2 className="font-heading text-2xl leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.35)] md:text-3xl">{item.title}</h2>
+            </div>
+          </Reveal>
+          );
+        })}
+      </section>
+
+      <section className="relative z-10 mx-auto mt-8 max-w-6xl px-4">
         <Reveal className="grid gap-3 sm:grid-cols-3">
           {stats.map(({ value, prefix, label }, index) => (
             <Card
@@ -135,7 +169,9 @@ export default async function HomePage() {
           <Reveal>
             <Badge variant="secondary">{copy.activitiesKicker}</Badge>
             <h2 className="mt-3 text-3xl text-forest md:text-4xl">{copy.homeWorkTitle}</h2>
-            {rest ? <p className="mt-3 text-muted-foreground">{rest}</p> : null}
+            {body.map((part) => (
+              <p key={part} className="mt-3 text-muted-foreground">{part}</p>
+            ))}
           </Reveal>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             {activities.map((item, index) => (

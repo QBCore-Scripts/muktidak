@@ -25,7 +25,7 @@ const fields: Record<ListKey, string[]> = {
   donations: ["donor", "phone", "amount", "method", "purpose", "date", "status"],
   accounts: ["bank", "branch", "accountName", "accountNumber", "accountType", "visible"],
   notices: ["title", "body", "date", "published"],
-  blogs: ["slug", "title", "excerpt", "body", "cover", "author", "date", "published"],
+  blogs: ["slug", "title", "excerpt", "body", "cover", "author", "category", "date", "published"],
   pages: ["slug", "title", "body"],
   media: ["name", "folder", "private"],
   districts: ["name", "office", "contact", "phone", "members"],
@@ -72,6 +72,13 @@ export async function POST(request: Request, ctx: Ctx) {
   const item = { id: newId(), ...defaults(resource), ...picked };
   if (resource === "blogs" && await blogSlugTaken(String((item as { slug?: string }).slug))) {
     return Response.json({ error: "এই স্লাগ আগে ব্যবহার হয়েছে" }, { status: 400 });
+  }
+  if (resource === "pages") {
+    const slug = String((item as { slug?: string }).slug);
+    if (reservedPageSlugs.has(slug)) return Response.json({ error: "এই লিংক আগে থেকে সাইটে আছে। উপরের তালিকা থেকে সেই পাতা খুলুন।" }, { status: 400 });
+    if ((await readDb()).pages.some((page) => page.slug === slug)) {
+      return Response.json({ error: "এই লিংক আগে ব্যবহার হয়েছে" }, { status: 400 });
+    }
   }
   await updateDb((db) => {
     (db[resource] as unknown[]).unshift(item);
@@ -150,6 +157,19 @@ function str(value: unknown, max = 500) {
   return typeof value === "string" ? value.trim().slice(0, max) : "";
 }
 
+function safeLogo(value: unknown) {
+  const raw = str(value, 300);
+  if (!raw) return "";
+  if (raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("\\")) return raw;
+  try {
+    const url = new URL(raw);
+    if (url.protocol === "https:" || url.protocol === "http:") return url.toString();
+  } catch {
+    return "";
+  }
+  return "";
+}
+
 function validate(resource: ListKey, data: Record<string, unknown>, creating: boolean) {
   if ("status" in data && resource === "members" && data.status !== "active" && data.status !== "inactive") {
     return "অবস্থা সঠিক নয়";
@@ -200,6 +220,24 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
   return "";
 }
 
+const reservedPageSlugs = new Set([
+  "home",
+  "about",
+  "vision",
+  "activities",
+  "gallery",
+  "notices",
+  "blogs",
+  "districts",
+  "contact",
+  "donate",
+  "manifesto",
+  "objectives",
+  "committee",
+  "admin",
+  "api",
+]);
+
 function blogSlug(value: string) {
   return value
     .toLowerCase()
@@ -223,7 +261,7 @@ function defaults(resource: ListKey) {
   if (resource === "donations") return { status: "received", date, method: "ব্যাংক", phone: "" };
   if (resource === "accounts") return { visible: true, accountType: "সঞ্চয়ী", accountName: "" };
   if (resource === "notices") return { published: true, date, body: "" };
-  if (resource === "blogs") return { published: false, date, excerpt: "", body: "", cover: "", author: "", slug: "" };
+  if (resource === "blogs") return { published: false, date, excerpt: "", body: "", cover: "", author: "", category: "", slug: "" };
   if (resource === "districts") return { members: 0, phone: "", office: "", contact: "" };
   if (resource === "activities") return { date: "", summary: "" };
   return {};
@@ -258,6 +296,7 @@ async function saveSettings(body: Record<string, unknown>) {
       phone: str(next.phone, 40),
       email: str(next.email, 120),
       address: str(next.address, 240),
+      logoUrl: safeLogo(next.logoUrl),
       copy: mergeCopy(next.copy),
     };
     if (emailChanging) db.admin.email = nextEmail;

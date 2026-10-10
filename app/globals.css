@@ -544,6 +544,7 @@ h6,
 
 .hero-shade {
   background:
+    radial-gradient(ellipse at 50% 42%, color-mix(in srgb, var(--forest-deep) 62%, transparent) 0%, transparent 68%),
     linear-gradient(90deg, var(--forest-deep) 0%, color-mix(in srgb, var(--forest-deep) 88%, transparent) 38%, color-mix(in srgb, var(--forest-deep) 35%, transparent) 75%, color-mix(in srgb, var(--forest-deep) 55%, transparent) 100%),
     linear-gradient(0deg, var(--forest-deep) 0%, transparent 40%);
 }

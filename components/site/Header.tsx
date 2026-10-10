@@ -19,7 +19,7 @@ function saveLocale(next: Locale) {
   document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
 }
 
-export function Header({ name, copy, t, locale }: { name: string; copy: SiteCopy; t: UiText; locale: Locale }) {
+export function Header({ name, copy, t, locale, logo = "" }: { name: string; copy: SiteCopy; t: UiText; locale: Locale; logo?: string }) {
   const path = usePathname();
   const router = useRouter();
   const [switching, startSwitch] = useTransition();
@@ -50,7 +50,7 @@ export function Header({ name, copy, t, locale }: { name: string; copy: SiteCopy
           <span className="side-photo side-photo-right" style={{ backgroundImage: "url(/history/fighters.jpg)" }} aria-hidden="true" />
           <div className="relative z-10 mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
           <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
-            <Mark />
+            <Mark src={logo} />
             <span className="min-w-0">
               <span className="block truncate font-heading text-base md:text-lg">{name}</span>
               <span className="block truncate text-[10px] font-medium tracking-[0.14em] text-paper/65">{locale === "en" ? siteNameBn : siteNameEn}</span>

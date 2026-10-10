@@ -181,7 +181,7 @@ export function withoutStored<T extends { stored?: string }>(item: T) {
 export async function getSettings(): Promise<Settings> {
   const { settings } = await loadState({ settings: 1 });
   if (!settings) throw new Error("সেটিংস নেই");
-  return { ...settings, copy: mergeCopy(settings.copy) };
+  return { ...settings, logoUrl: settings.logoUrl || "", copy: mergeCopy(settings.copy) };
 }
 
 export async function getActivities(): Promise<Activity[]> {
@@ -218,6 +218,10 @@ export async function getDistricts(): Promise<District[]> {
 
 export async function getVisibleAccounts(): Promise<BankAccount[]> {
   return ((await loadState({ accounts: 1 })).accounts ?? []).filter((item) => item.visible);
+}
+
+export async function getPages(): Promise<PageContent[]> {
+  return (await loadState({ pages: 1 })).pages ?? [];
 }
 
 export async function getPage(slug: string): Promise<PageContent | null> {

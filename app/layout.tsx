@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { NavProgress } from "@/components/site/NavProgress";
+import { getSettings } from "@/lib/db";
 import { getLocale } from "@/lib/locale";
 import { siteDescription, siteKeywords, siteNameBn, siteNameEn, siteUrl } from "@/lib/seo";
 import "./globals.css";
@@ -18,10 +19,11 @@ const display = localFont({
   display: "swap",
 });
 
-const englishDescription = "Bangladesh Muktir Dak 71 is a people's political party — grassroots politics, district offices and open accounts.";
+const englishDescription = "Bangladesh Muktir Dak 71 is a political party working to restore democracy and establish Mujibism.";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const en = (await getLocale()) === "en";
+  const [locale, settings] = await Promise.all([getLocale(), getSettings()]);
+  const en = locale === "en";
   const title = en ? `${siteNameEn} | ${siteNameBn}` : `${siteNameBn} | ${siteNameEn}`;
   const description = en ? englishDescription : siteDescription;
   return {
@@ -48,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
           url: "/og.jpg",
           width: 1200,
           height: 630,
-          alt: en ? "Bangladesh Muktir Dak 71 — with the people, politics of the field" : "মানুষের পাশে, মাঠের রাজনীতি",
+          alt: en ? "Bangladesh Muktir Dak 71 — a political party for democracy and Mujibism" : "বাংলাদেশ মুক্তির ডাক-৭১ — গণতন্ত্র পুনরুদ্ধার ও মুজিববাদের রাজনৈতিক দল",
         },
       ],
     },
@@ -59,6 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ["/og.jpg"],
     },
     robots: { index: true, follow: true },
+    icons: settings.logoUrl ? { icon: settings.logoUrl, apple: settings.logoUrl } : undefined,
   };
 }
 

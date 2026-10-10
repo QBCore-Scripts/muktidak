@@ -20,7 +20,7 @@ const links = [
   ["/admin/settings", "সেটিংস"],
 ];
 
-export function AdminShell({ email, children }: { email: string; children: React.ReactNode }) {
+export function AdminShell({ email, logo = "", children }: { email: string; logo?: string; children: React.ReactNode }) {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const current = links.find(([href]) => (href === "/admin" ? path === href : path.startsWith(href)))?.[1] ?? "অ্যাডমিন";
@@ -55,7 +55,7 @@ export function AdminShell({ email, children }: { email: string; children: React
         <span className="side-photo side-photo-deep side-photo-left" style={{ backgroundImage: "url(/history/speech.jpg)" }} aria-hidden="true" />
         <span className="side-photo side-photo-deep side-photo-right" style={{ backgroundImage: "url(/history/fighters.jpg)" }} aria-hidden="true" />
         <div className="relative z-10 flex items-center gap-3 px-2">
-          <Mark className="h-10 w-10" />
+          <Mark src={logo} className="h-12 w-12" />
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold">অ্যাডমিন প্যানেল</p>
             <p className="truncate text-[10px] tracking-[0.12em] text-paper/55">{siteNameEn}</p>
@@ -76,9 +76,12 @@ export function AdminShell({ email, children }: { email: string; children: React
       </aside>
       <div className="admin-canvas min-w-0">
         <div className="admin-bar sticky top-0 z-20 flex items-center justify-between border-b border-line bg-paper/90 px-4 py-3 backdrop-blur-md md:px-8">
-          <div className="min-w-0">
-            <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted">মুক্তির ডাক-৭১</p>
-            <p className="truncate text-sm font-semibold text-forest">{current}</p>
+          <div className="flex min-w-0 items-center gap-3">
+            <Mark src={logo} className="h-9 w-9 md:hidden" />
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-[0.22em] text-muted">মুক্তির ডাক-৭১</p>
+              <p className="truncate text-sm font-semibold text-forest">{current}</p>
+            </div>
           </div>
           <button
             type="button"
