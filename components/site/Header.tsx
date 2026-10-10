@@ -29,7 +29,7 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
     saveLocale(next);
     startSwitch(() => router.refresh());
   }
-  const primary = [
+  const links = [
     ["/", copy.navHome],
     ["/about", copy.navAbout],
     ["/vision", copy.navVision],
@@ -39,13 +39,10 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
     ["/blogs", copy.navBlogs],
     ["/districts", copy.navDistricts],
     ["/contact", copy.navContact],
-  ];
-  const documents = [
     ["/manifesto", copy.linkManifesto],
     ["/objectives", copy.linkObjectives],
     ["/committee", copy.linkCommittee],
   ];
-  const links = [...primary.slice(0, 2), ...documents, ...primary.slice(2)];
   const [open, setOpen] = useState(false);
 
   return (
@@ -54,7 +51,7 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
         <div className="relative overflow-hidden">
           <span className="side-photo side-photo-left" style={{ backgroundImage: "url(/history/speech.jpg)" }} aria-hidden="true" />
           <span className="side-photo side-photo-right" style={{ backgroundImage: "url(/history/fighters.jpg)" }} aria-hidden="true" />
-          <div className="relative z-10 mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
+          <div className="relative z-10 mx-auto flex w-full max-w-[1600px] items-center gap-3 px-4 py-2.5">
           <Link href="/" className="flex min-w-0 items-center gap-3" onClick={() => setOpen(false)}>
             <Mark src={logo} />
             <span className="min-w-0">
@@ -62,21 +59,21 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
               <span className="block truncate text-[10px] font-medium tracking-[0.14em] text-paper/65">{locale === "en" ? "Political party" : siteNameEn}</span>
             </span>
           </Link>
-          <nav className="ml-auto hidden items-center gap-0.5 lg:flex" aria-label={t.mainMenu}>
-            {primary.map(([href, label]) => {
+          <nav className="ml-auto hidden min-w-0 flex-nowrap items-center gap-0.5 overflow-x-auto lg:flex [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" aria-label={t.mainMenu}>
+            {links.map(([href, label]) => {
               const active = href === "/" ? path === "/" : path.startsWith(href);
               return (
                 <Link
                   key={href}
                   href={href}
                   aria-current={active ? "page" : undefined}
-                  className={`rounded-full px-3 py-1.5 text-sm transition-colors ${active ? "bg-white/15 font-medium text-white" : "text-paper/80 hover:bg-white/10 hover:text-white"}`}
+                  className={`whitespace-nowrap rounded-full px-2 py-1 text-[13px] transition-colors ${active ? "bg-white/15 font-medium text-white" : "text-paper/80 hover:bg-white/10 hover:text-white"}`}
                 >
                   {label}
                 </Link>
               );
             })}
-            <Link href="/donate" className={cn(buttonVariants({ variant: "donate" }), "ml-2 rounded-full px-4")}>
+            <Link href="/donate" className={cn(buttonVariants({ variant: "donate" }), "ml-1 whitespace-nowrap rounded-full px-3")}>
               {copy.navDonate}
             </Link>
           </nav>
@@ -126,21 +123,6 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
             </div>
           </nav>
         ) : null}
-        <nav className="relative z-10 hidden flex-wrap items-center justify-center gap-1 px-4 pb-3 lg:flex" aria-label={t.mainMenu}>
-          {documents.map(([href, label]) => {
-            const active = path.startsWith(href);
-            return (
-              <Link
-                key={href}
-                href={href}
-                aria-current={active ? "page" : undefined}
-                className={`rounded-full px-3 py-1 text-sm transition-colors ${active ? "bg-white/15 font-medium text-white" : "text-paper/75 hover:bg-white/10 hover:text-white"}`}
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
         </div>
         <svg viewBox="0 0 1440 28" preserveAspectRatio="none" className="block h-4 w-full bg-paper/90 text-forest" aria-hidden="true">
           <path fill="currentColor" d="M0 0h1440v5C1040 28 400 28 0 5V0z" />
