@@ -20,16 +20,21 @@ export function DashboardView({ initial }: { initial: Dash }) {
   const [error, setError] = useState("");
 
   async function markRead(id: string) {
-    await adminFetch("/api/admin/messages", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, read: true }),
-    });
-    setData((current) =>
-      current
-        ? { ...current, messages: current.messages.map((item) => (item.id === id ? { ...item, read: true } : item)) }
-        : current,
-    );
+    try {
+      await adminFetch("/api/admin/messages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, read: true }),
+      });
+      setError("");
+      setData((current) =>
+        current
+          ? { ...current, messages: current.messages.map((item) => (item.id === id ? { ...item, read: true } : item)) }
+          : current,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "পঠিত করা যায়নি");
+    }
   }
 
   const stats = [

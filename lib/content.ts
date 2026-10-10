@@ -1,12 +1,13 @@
 import { getPage } from "./db";
+import { englishPages } from "./english";
+import { getLocale } from "./locale";
 import type { PageContent } from "./types";
 
 export async function pageBySlug(slug: string): Promise<PageContent> {
-  const page = await getPage(slug);
-  if (!page) {
-    return { id: slug, slug, title: slug, body: "" };
-  }
-  return page;
+  const page = (await getPage(slug)) ?? { id: slug, slug, title: slug, body: "" };
+  if ((await getLocale()) !== "en") return page;
+  const english = englishPages[slug];
+  return english ? { ...page, title: english.title, body: english.body } : page;
 }
 
 export function paragraphs(body: string) {

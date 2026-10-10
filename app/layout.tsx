@@ -61,7 +61,7 @@ export async function generateMetadata(): Promise<Metadata> {
       images: ["/og.jpg"],
     },
     robots: { index: true, follow: true },
-    icons: settings.logoUrl ? { icon: settings.logoUrl, apple: settings.logoUrl } : undefined,
+    icons: { icon: settings.logoUrl || "/logo.png", apple: settings.logoUrl || "/logo.png" },
   };
 }
 

@@ -1,14 +1,37 @@
 import Link from "next/link";
-import type { Locale, UiText } from "@/lib/i18n";
+import { englishPages, telHref } from "@/lib/english";
+import { footerLinkList } from "@/lib/copy";
 import { getPages } from "@/lib/db";
+import type { Locale } from "@/lib/i18n";
 import type { Settings } from "@/lib/types";
-import { siteNameBn, siteNameEn } from "@/lib/seo";
 import { Mark } from "./Mark";
 
-const listed = new Set(["home", "manifesto", "objectives", "committee", "about", "activities", "blogs", "notices", "donate"]);
+const listed = new Set(["home", "manifesto", "objectives", "committee", "about", "vision", "activities", "gallery", "blogs", "notices", "districts", "contact", "donate"]);
 
-export async function Footer({ settings, t, locale }: { settings: Settings; t: UiText; locale: Locale }) {
-  const extra = (await getPages()).filter((page) => page.slug && page.title && !listed.has(page.slug));
+const linkClass = "text-paper/85 transition-colors hover:text-white";
+
+export async function Footer({ settings, locale }: { settings: Settings; locale: Locale }) {
+  const configured = footerLinkList(settings.copy.footerLinks);
+  const extra = (await getPages())
+    .filter((page) => page.slug && page.title && !listed.has(page.slug))
+    .map((page) => (locale === "en" && englishPages[page.slug] ? { ...page, title: englishPages[page.slug].title } : page))
+    .map((page) => ({ href: `/${page.slug}`, label: page.title }))
+    .filter((page) => !configured.hidden.has(page.href) && !configured.links.some((item) => item.href === page.href));
+  const builtin = [
+    { href: "/manifesto", label: settings.copy.linkManifesto },
+    { href: "/objectives", label: settings.copy.linkObjectives },
+    { href: "/committee", label: settings.copy.linkCommittee },
+    { href: "/about", label: settings.copy.navAbout },
+    { href: "/vision", label: settings.copy.navVision },
+    { href: "/activities", label: settings.copy.navActivities },
+    { href: "/gallery", label: settings.copy.navGallery },
+    { href: "/blogs", label: settings.copy.navBlogs },
+    { href: "/notices", label: settings.copy.navNotices },
+    { href: "/districts", label: settings.copy.navDistricts },
+    { href: "/contact", label: settings.copy.navContact },
+    { href: "/donate", label: settings.copy.navDonate },
+  ].filter((page) => page.label && !configured.hidden.has(page.href));
+  const pages = [...(configured.links.length ? configured.links : builtin), ...extra];
   return (
     <footer className="mt-16 text-paper">
       <svg viewBox="0 0 1440 28" preserveAspectRatio="none" className="block h-5 w-full text-forest-deep" aria-hidden="true">
@@ -22,39 +45,33 @@ export async function Footer({ settings, t, locale }: { settings: Settings; t: U
         {settings.copy.footerLine ? (
           <p className="max-w-xl text-2xl font-semibold leading-snug tracking-tight md:text-3xl">{settings.copy.footerLine}</p>
         ) : null}
-        <div className={`grid gap-10 border-t border-white/10 pt-8 md:grid-cols-3 ${settings.copy.footerLine ? "mt-10" : ""}`}>
-          <div>
+        <div className={`grid items-start gap-10 border-t border-white/10 pt-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)_minmax(0,0.85fr)] lg:gap-0 ${settings.copy.footerLine ? "mt-10" : ""}`}>
+          <div className="lg:pr-10">
             <div className="flex items-center gap-3">
               <Mark src={settings.logoUrl} className="h-12 w-12" />
               <span>
                 <p className="font-heading text-lg">{settings.shortName}</p>
-                <p className="text-[11px] tracking-[0.12em] text-paper/55">{locale === "en" ? siteNameBn : siteNameEn}</p>
+                {settings.copy.footerAlt ? <p className="text-[11px] tracking-[0.12em] text-paper/55">{settings.copy.footerAlt}</p> : null}
               </span>
             </div>
             <p className="mt-3 max-w-sm text-sm leading-relaxed text-paper/75">{settings.tagline}</p>
           </div>
-          <div>
-            <p className="text-xs font-semibold tracking-wide text-paper/50">{t.footerPages}</p>
-            <ul className="mt-4 grid gap-2.5 text-sm text-paper/85">
-              <li><Link href="/manifesto" className="hover:text-white">{settings.copy.linkManifesto}</Link></li>
-              <li><Link href="/objectives" className="hover:text-white">{settings.copy.linkObjectives}</Link></li>
-              <li><Link href="/committee" className="hover:text-white">{settings.copy.linkCommittee}</Link></li>
-              <li><Link href="/about" className="hover:text-white">{settings.copy.navAbout}</Link></li>
-              <li><Link href="/activities" className="hover:text-white">{settings.copy.navActivities}</Link></li>
-              <li><Link href="/blogs" className="hover:text-white">{settings.copy.navBlogs}</Link></li>
-              <li><Link href="/notices" className="hover:text-white">{settings.copy.navNotices}</Link></li>
-              <li><Link href="/donate" className="hover:text-white">{settings.copy.navDonate}</Link></li>
-              {extra.map((page) => (
-                <li key={page.id}><Link href={`/${page.slug}`} className="hover:text-white">{page.title}</Link></li>
+          <div className="lg:border-x lg:border-white/10 lg:px-10">
+            {settings.copy.footerPagesTitle ? <p className="text-xs font-semibold tracking-[0.16em] text-paper/50">{settings.copy.footerPagesTitle}</p> : null}
+            <ul className="mt-4 columns-2 gap-x-10 text-sm [column-fill:balance]">
+              {pages.map((page) => (
+                <li key={page.href} className="break-inside-avoid pb-2.5">
+                  <Link href={page.href} className={`${linkClass} block leading-snug`}>{page.label}</Link>
+                </li>
               ))}
             </ul>
           </div>
-          <div>
-            <p className="text-xs font-semibold tracking-wide text-paper/50">{t.footerContact}</p>
-            <ul className="mt-4 grid gap-2.5 text-sm text-paper/85">
-              <li>{settings.address}</li>
-              <li><a href={`tel:${settings.phone}`} className="hover:text-white">{settings.phone}</a></li>
-              <li><a href={`mailto:${settings.email}`} className="hover:text-white">{settings.email}</a></li>
+          <div className="lg:pl-10">
+            {settings.copy.footerContactTitle ? <p className="text-xs font-semibold tracking-[0.16em] text-paper/50">{settings.copy.footerContactTitle}</p> : null}
+            <ul className="mt-4 grid gap-2.5 text-sm">
+              {settings.address ? <li className="leading-relaxed text-paper/85">{settings.address}</li> : null}
+              {settings.phone ? <li><a href={telHref(settings.phone)} className={linkClass}>{settings.phone}</a></li> : null}
+              {settings.email ? <li><a href={`mailto:${settings.email}`} className={`${linkClass} break-all`}>{settings.email}</a></li> : null}
             </ul>
           </div>
         </div>

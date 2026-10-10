@@ -6,7 +6,7 @@ import { useState, useTransition } from "react";
 import type { SiteCopy } from "@/lib/copy";
 import { buttonVariants } from "@/components/ui/button";
 import { LOCALE_COOKIE, type Locale, type UiText } from "@/lib/i18n";
-import { siteNameBn, siteNameEn } from "@/lib/seo";
+import { siteNameEn } from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import { Mark } from "./Mark";
 
@@ -29,7 +29,7 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
     saveLocale(next);
     startSwitch(() => router.refresh());
   }
-  const links = [
+  const primary = [
     ["/", copy.navHome],
     ["/about", copy.navAbout],
     ["/vision", copy.navVision],
@@ -40,6 +40,12 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
     ["/districts", copy.navDistricts],
     ["/contact", copy.navContact],
   ];
+  const documents = [
+    ["/manifesto", copy.linkManifesto],
+    ["/objectives", copy.linkObjectives],
+    ["/committee", copy.linkCommittee],
+  ];
+  const links = [...primary.slice(0, 2), ...documents, ...primary.slice(2)];
   const [open, setOpen] = useState(false);
 
   return (
@@ -53,11 +59,11 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
             <Mark src={logo} />
             <span className="min-w-0">
               <span className="block truncate font-heading text-base md:text-lg">{name}</span>
-              <span className="block truncate text-[10px] font-medium tracking-[0.14em] text-paper/65">{locale === "en" ? siteNameBn : siteNameEn}</span>
+              <span className="block truncate text-[10px] font-medium tracking-[0.14em] text-paper/65">{locale === "en" ? "Political party" : siteNameEn}</span>
             </span>
           </Link>
           <nav className="ml-auto hidden items-center gap-0.5 lg:flex" aria-label={t.mainMenu}>
-            {links.map(([href, label]) => {
+            {primary.map(([href, label]) => {
               const active = href === "/" ? path === "/" : path.startsWith(href);
               return (
                 <Link
@@ -120,6 +126,21 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
             </div>
           </nav>
         ) : null}
+        <nav className="relative z-10 hidden flex-wrap items-center justify-center gap-1 px-4 pb-3 lg:flex" aria-label={t.mainMenu}>
+          {documents.map(([href, label]) => {
+            const active = path.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                aria-current={active ? "page" : undefined}
+                className={`rounded-full px-3 py-1 text-sm transition-colors ${active ? "bg-white/15 font-medium text-white" : "text-paper/75 hover:bg-white/10 hover:text-white"}`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
         </div>
         <svg viewBox="0 0 1440 28" preserveAspectRatio="none" className="block h-4 w-full bg-paper/90 text-forest" aria-hidden="true">
           <path fill="currentColor" d="M0 0h1440v5C1040 28 400 28 0 5V0z" />

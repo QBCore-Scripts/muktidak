@@ -18,19 +18,24 @@ export function ContactForm({ t, locale }: { t: UiText; locale: Locale }) {
     const data = Object.fromEntries(new FormData(form).entries());
     setStatus("sending");
     setError("");
-    const res = await fetch("/api/contact", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
-    if (!res.ok) {
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setStatus("error");
+        setError(locale === "bn" && body.error ? body.error : t.sendFailed);
+        return;
+      }
+      form.reset();
+      setStatus("sent");
+    } catch {
       setStatus("error");
-      setError(locale === "bn" && body.error ? body.error : t.sendFailed);
-      return;
+      setError(t.sendFailed);
     }
-    form.reset();
-    setStatus("sent");
   }
 
   return (

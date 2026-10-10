@@ -1,6 +1,10 @@
 export type SiteCopy = {
   headerLine: string;
   footerLine: string;
+  footerAlt: string;
+  footerPagesTitle: string;
+  footerContactTitle: string;
+  footerLinks: string;
   footerNote: string;
   flavorLine: string;
   homeDate: string;
@@ -63,6 +67,10 @@ export function defaultCopy(): SiteCopy {
   return {
     headerLine: "বাংলাদেশ মুক্তির ডাক-৭১ — গণতন্ত্র পুনরুদ্ধার ও মুজিববাদ প্রতিষ্ঠার রাজনৈতিক দল",
     footerLine: "",
+    footerAlt: "Bangladesh Muktir Dak 71",
+    footerPagesTitle: "পাতা",
+    footerContactTitle: "যোগাযোগ",
+    footerLinks: "",
     footerNote: "Developed by Syntaxx Technology",
     flavorLine: "রাজনৈতিক দল · বাংলাদেশ মুক্তির ডাক-৭১",
     homeDate: "গণতন্ত্র পুনরুদ্ধারের লড়াই",
@@ -130,6 +138,7 @@ export function defaultCopy(): SiteCopy {
 }
 
 const longKeys = new Set<keyof SiteCopy>([
+  "footerLinks",
   "footerNote",
   "homeNote",
   "donateText",
@@ -166,6 +175,21 @@ export function parseCopy(value: unknown): SiteCopy {
   } catch {
     return defaultCopy();
   }
+}
+
+export function footerLinkList(text: string) {
+  const links: { href: string; label: string }[] = [];
+  const hidden = new Set<string>();
+  for (const line of text.split(/\n+/)) {
+    const pipe = line.indexOf("|");
+    if (pipe < 0) continue;
+    const label = line.slice(0, pipe).trim().slice(0, 80);
+    const href = line.slice(pipe + 1).trim();
+    if (!href.startsWith("/") || href.startsWith("//") || href.includes("..") || /\s/.test(href) || href.length > 120) continue;
+    if (!label || label === "লুকান" || label === "-") hidden.add(href);
+    else if (!links.some((item) => item.href === href)) links.push({ href, label });
+  }
+  return { links, hidden };
 }
 
 export function visionCards(text: string) {

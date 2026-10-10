@@ -13,6 +13,7 @@ import { visionCards } from "@/lib/copy";
 import { pageBySlug, paragraphs } from "@/lib/content";
 import { getActivities, getPublishedBlogs, getPublishedNotices, publicCounts } from "@/lib/db";
 import { pad2 } from "@/lib/i18n";
+import { englishActivity, englishNotice, englishText } from "@/lib/english";
 import { getSite } from "@/lib/locale";
 import { cn } from "@/lib/utils";
 
@@ -32,10 +33,10 @@ export default async function HomePage() {
   const { locale, t, settings } = await getSite();
   const copy = settings.copy;
   const counts = await publicCounts();
-  const activities = await getActivities();
+  const activities = (await getActivities()).map((item) => (locale === "en" ? englishActivity(item) : item));
   const home = await pageBySlug("home");
-  const notices = (await getPublishedNotices()).slice(0, 5);
-  const blogs = (await getPublishedBlogs()).slice(0, 3);
+  const notices = (await getPublishedNotices()).slice(0, 5).map((item) => (locale === "en" ? englishNotice(item) : item));
+  const blogs = (await getPublishedBlogs()).slice(0, 3).map((item) => (locale === "en" ? { ...item, category: englishText(item.category) } : item));
   const points = visionCards(copy.visionPoints).slice(0, 3);
   const body = paragraphs(home.body);
   const pillars = copy.heroPillars.split(/\n/).map((item) => item.trim()).filter(Boolean);
@@ -46,14 +47,14 @@ export default async function HomePage() {
     { href: "/committee", label: copy.linkCommittee },
   ];
   const spotlight = [
-    { kicker: copy.highlightKicker, title: copy.highlightOne },
-    { kicker: "", title: copy.highlightTwo },
-    { kicker: "", title: copy.highlightThree },
+    { href: "/vision", kicker: copy.highlightKicker, title: copy.highlightOne },
+    { href: "/about", kicker: "", title: copy.highlightTwo },
+    { href: "/objectives", kicker: "", title: copy.highlightThree },
   ];
   const stats = [
-    { value: counts.donationTotal, prefix: "৳", label: t.statDonations },
-    { value: counts.activeMembers, prefix: "", label: t.statMembers },
-    { value: counts.districtCount, prefix: "", label: t.statDistricts },
+    { href: "/donate", value: counts.donationTotal, prefix: "৳", label: t.statDonations },
+    { href: "", value: counts.activeMembers, prefix: "", label: t.statMembers },
+    { href: "/districts", value: counts.districtCount, prefix: "", label: t.statDistricts },
   ];
 
   return (
@@ -74,6 +75,7 @@ export default async function HomePage() {
 
         <div className="mx-auto flex min-h-[min(78vh,44rem)] max-w-4xl flex-col items-center justify-center px-4 pb-28 pt-16 text-center">
           <Reveal index={0}>
+            {copy.homeDate ? <p className="mb-4 text-sm font-medium tracking-wide text-[#9fe0b9]">{copy.homeDate}</p> : null}
             <h1 className="text-3xl leading-[1.28] text-white [text-shadow:0_6px_30px_rgba(0,0,0,0.35)] sm:text-4xl md:text-5xl lg:text-6xl">
               {copy.heroTitle}
             </h1>
@@ -90,6 +92,15 @@ export default async function HomePage() {
                 </li>
               ))}
             </ul>
+            {copy.homeFreedom ? <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80">{copy.homeFreedom}</p> : null}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+              <Link href="/donate" className={cn(buttonVariants({ variant: "donate", size: "xl" }))}>
+                {copy.homeDonate}
+              </Link>
+              <Link href="/about" className={cn(buttonVariants({ size: "xl" }), "border border-white/30 bg-white/10 text-white hover:bg-white/20")}>
+                {copy.homeAbout}
+              </Link>
+            </div>
           </Reveal>
           <Reveal index={3}>
             <div className="mt-10" role="img" aria-label={settings.shortName}>
@@ -116,12 +127,14 @@ export default async function HomePage() {
         {spotlight.map((item, index) => {
           const art = highlightArt[index];
           return (
-          <Reveal key={item.title} as="article" variant="zoom" index={index} className={`tile lift flex p-6 ${art.tint} ${art.top ? "tile-top items-start" : "items-end"}`}>
-            <Image src={art.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" />
-            <div className="w-full text-center">
-              {item.kicker ? <p className="text-sm font-medium tracking-wide text-[#9fe0b9]">{item.kicker}</p> : null}
-              <h2 className="font-heading text-2xl leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.35)] md:text-3xl">{item.title}</h2>
-            </div>
+          <Reveal key={item.href} variant="zoom" index={index}>
+            <Link href={item.href} className={`tile lift flex p-6 ${art.tint} ${art.top ? "tile-top items-start" : "items-end"}`}>
+              <Image src={art.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" />
+              <div className="w-full text-center">
+                {item.kicker ? <p className="text-sm font-medium tracking-wide text-[#9fe0b9]">{item.kicker}</p> : null}
+                <h2 className="font-heading text-2xl leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.35)] md:text-3xl">{item.title}</h2>
+              </div>
+            </Link>
           </Reveal>
           );
         })}
@@ -129,20 +142,29 @@ export default async function HomePage() {
 
       <section className="relative z-10 mx-auto mt-8 max-w-6xl px-4">
         <Reveal className="grid gap-3 sm:grid-cols-3">
-          {stats.map(({ value, prefix, label }, index) => (
-            <Card
-              key={label}
-              className={cn(
-                "lift gap-1 rounded-2xl px-6 py-6 shadow-[0_24px_50px_-24px_rgba(12,50,40,0.45)]",
-                index === 0 ? "bg-destructive text-white ring-0" : "ring-forest/8",
-              )}
-            >
-              <p className={cn("text-sm", index === 0 ? "text-white/80" : "text-muted-foreground")}>{label}</p>
-              <p className={cn("text-4xl font-semibold", index === 0 ? "text-white" : "text-forest")}>
-                <CountUp value={value} prefix={prefix} locale={locale} />
-              </p>
-            </Card>
-          ))}
+          {stats.map(({ href, value, prefix, label }, index) => {
+            const card = (
+              <Card
+                className={cn(
+                  "lift gap-1 rounded-2xl px-6 py-6 shadow-[0_24px_50px_-24px_rgba(12,50,40,0.45)]",
+                  index === 0 ? "bg-destructive text-white ring-0" : "ring-forest/8",
+                  href && "h-full",
+                )}
+              >
+                <p className={cn("text-sm", index === 0 ? "text-white/80" : "text-muted-foreground")}>{label}</p>
+                <p className={cn("text-4xl font-semibold", index === 0 ? "text-white" : "text-forest")}>
+                  <CountUp value={value} prefix={prefix} locale={locale} />
+                </p>
+              </Card>
+            );
+            return href ? (
+              <Link key={label} href={href} className="block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
+                {card}
+              </Link>
+            ) : (
+              <div key={label}>{card}</div>
+            );
+          })}
         </Reveal>
       </section>
 
@@ -167,8 +189,15 @@ export default async function HomePage() {
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.05fr_.95fr]">
         <div>
           <Reveal>
-            <Badge variant="secondary">{copy.activitiesKicker}</Badge>
-            <h2 className="mt-3 text-3xl text-forest md:text-4xl">{copy.homeWorkTitle}</h2>
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <Badge variant="secondary">{copy.activitiesKicker}</Badge>
+                <h2 className="mt-3 text-3xl text-forest md:text-4xl">{copy.homeWorkTitle}</h2>
+              </div>
+              <Link href="/activities" className={cn(buttonVariants({ variant: "outline" }), "shrink-0 rounded-full")}>
+                {copy.navActivities}
+              </Link>
+            </div>
             {body.map((part) => (
               <p key={part} className="mt-3 text-muted-foreground">{part}</p>
             ))}

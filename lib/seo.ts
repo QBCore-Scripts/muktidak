@@ -26,3 +26,7 @@ export function siteUrl() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, "");
   return configured || "https://bdmuktirdak71.org";
 }
+
+export function jsonLdScript(data: unknown) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}

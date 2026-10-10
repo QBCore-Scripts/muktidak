@@ -11,10 +11,17 @@ import { Reveal } from "./Reveal";
 
 export function AccountCards({ accounts, t }: { accounts: BankAccount[]; t: UiText }) {
   const [copied, setCopied] = useState("");
+  const [failed, setFailed] = useState("");
 
   async function copy(number: string) {
-    await navigator.clipboard.writeText(number);
-    setCopied(number);
+    try {
+      await navigator.clipboard.writeText(number);
+      setFailed("");
+      setCopied(number);
+    } catch {
+      setCopied("");
+      setFailed(number);
+    }
   }
 
   if (accounts.length === 0) {
@@ -53,7 +60,7 @@ export function AccountCards({ accounts, t }: { accounts: BankAccount[]; t: UiTe
                 className="rounded-full px-4"
                 onClick={() => copy(account.accountNumber)}
               >
-                {copied === account.accountNumber ? t.copied : t.copyNumber}
+                {copied === account.accountNumber ? t.copied : failed === account.accountNumber ? t.copyFailed : t.copyNumber}
               </Button>
             </CardFooter>
           </Card>

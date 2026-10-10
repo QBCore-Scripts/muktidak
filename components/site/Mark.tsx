@@ -9,7 +9,7 @@ export function Mark({ className = "h-12 w-12", priority = false, src = "" }: { 
       width={1024}
       height={1024}
       priority={priority}
-      unoptimized={logo.startsWith("/api/")}
+      unoptimized={logo.startsWith("/api/") || logo.startsWith("http")}
       className={`${className} object-contain`}
       aria-hidden
     />

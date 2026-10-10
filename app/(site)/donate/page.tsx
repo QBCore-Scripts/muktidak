@@ -1,5 +1,6 @@
 import { AccountCards } from "@/components/site/AccountCards";
 import { PageHeader } from "@/components/site/PageHeader";
+import { englishText, latinDigits } from "@/lib/english";
 import { getVisibleAccounts } from "@/lib/db";
 import { getSite, localizedMeta } from "@/lib/locale";
 
@@ -8,9 +9,20 @@ export function generateMetadata() {
 }
 
 export default async function DonatePage() {
-  const { t, settings } = await getSite();
+  const { locale, t, settings } = await getSite();
   const copy = settings.copy;
-  const accounts = await getVisibleAccounts();
+  const accounts = (await getVisibleAccounts()).map((item) =>
+    locale === "en"
+      ? {
+          ...item,
+          bank: englishText(item.bank),
+          branch: englishText(item.branch),
+          accountType: englishText(item.accountType),
+          accountNumber: latinDigits(item.accountNumber),
+          accountName: "Bangladesh Muktir Dak 71",
+        }
+      : item,
+  );
 
   return (
     <>

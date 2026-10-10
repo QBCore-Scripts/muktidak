@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { telHref } from "@/lib/english";
 import { getSite, localizedMeta } from "@/lib/locale";
 
 export function generateMetadata() {
@@ -13,7 +14,7 @@ export default async function ContactPage() {
   const { locale, t, settings } = await getSite();
   const rows = [
     [t.address, settings.address, ""],
-    [t.phone, settings.phone, `tel:${settings.phone}`],
+    [t.phone, settings.phone, telHref(settings.phone)],
     [t.email, settings.email, `mailto:${settings.email}`],
   ].filter(([, value]) => value);
 

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { paragraphs } from "@/lib/content";
 import { getPage } from "@/lib/db";
-import { getSite } from "@/lib/locale";
+import { getSite, shareMeta } from "@/lib/locale";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -29,10 +29,9 @@ const reserved = new Set([
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const page = reserved.has(slug) ? null : await getPage(slug);
-  return {
-    title: page?.title || "পাতা",
-    description: page?.body.replace(/\s+/g, " ").trim().slice(0, 160) || undefined,
-  };
+  const title = page?.title || "পাতা";
+  const description = page?.body.replace(/\s+/g, " ").trim().slice(0, 160) || title;
+  return page ? shareMeta(`/${page.slug}`, title, description) : { title, robots: { index: false, follow: false } };
 }
 
 export default async function ExtraPage({ params }: Props) {

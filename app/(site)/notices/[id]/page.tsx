@@ -1,28 +1,29 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { englishNotice } from "@/lib/english";
 import { getPublishedNotice } from "@/lib/db";
 import { formatDate } from "@/lib/format";
-import { getSite } from "@/lib/locale";
-import { siteNameBn, siteNameEn } from "@/lib/seo";
+import { getSite, shareMeta } from "@/lib/locale";
 
 type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const notice = await getPublishedNotice(id);
-  const title = notice?.title ?? (await getSite()).t.notice;
-  return {
-    title,
-    description: `${title} — ${siteNameBn} (${siteNameEn})`,
-  };
+  const found = await getPublishedNotice(id);
+  const { locale, t } = await getSite();
+  const notice = found && locale === "en" ? englishNotice(found) : found;
+  const title = notice?.title ?? t.notice;
+  const description = notice?.body.replace(/\s+/g, " ").trim().slice(0, 160) || title;
+  return shareMeta(found ? `/notices/${found.id}` : "/notices", title, description);
 }
 
 export default async function NoticePage({ params }: Props) {
   const { id } = await params;
-  const notice = await getPublishedNotice(id);
-  if (!notice) notFound();
+  const found = await getPublishedNotice(id);
+  if (!found) notFound();
   const { locale, t } = await getSite();
+  const notice = locale === "en" ? englishNotice(found) : found;
 
   return (
     <article className="panel mx-auto my-10 max-w-3xl rounded-2xl border border-line bg-paper px-6 py-10">

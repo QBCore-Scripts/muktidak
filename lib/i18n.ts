@@ -47,6 +47,19 @@ const bn = {
   copyNumber: "নম্বর কপি করুন",
   notice: "নোটিশ",
   blog: "ব্লগ",
+  all: "সব",
+  category: "ক্যাটাগরি",
+  emptyGallery: "এই ক্যাটাগরিতে এখনো ছবি নেই।",
+  emptyCategory: "এই ক্যাটাগরিতে এখনো লেখা নেই।",
+  emptyDistricts: "এখনো কোনো জেলা দপ্তর যোগ হয়নি।",
+  emptyActivities: "এখনো কোনো কার্যক্রম যোগ হয়নি।",
+  notFoundTitle: "পাতা পাওয়া যায়নি",
+  notFoundText: "এই ঠিকানায় কিছু নেই। প্রচ্ছদে ফিরে যান।",
+  backHome: "প্রচ্ছদে যান",
+  errorTitle: "কিছু একটা ভুল হয়েছে",
+  errorText: "পাতাটি এখন খোলা যায়নি। আবার চেষ্টা করুন।",
+  retry: "আবার চেষ্টা",
+  copyFailed: "কপি হয়নি",
 };
 
 export type UiText = typeof bn;
@@ -88,6 +101,19 @@ const en: UiText = {
   copyNumber: "Copy number",
   notice: "Notice",
   blog: "Blog",
+  all: "All",
+  category: "Category",
+  emptyGallery: "No photos in this category yet.",
+  emptyCategory: "No posts in this category yet.",
+  emptyDistricts: "No district office has been added yet.",
+  emptyActivities: "No programme has been added yet.",
+  notFoundTitle: "Page not found",
+  notFoundText: "Nothing lives at this address. Go back to the home page.",
+  backHome: "Back to home",
+  errorTitle: "Something went wrong",
+  errorText: "This page could not be opened. Try again.",
+  retry: "Try again",
+  copyFailed: "Could not copy",
 };
 
 export const uiText: Record<Locale, UiText> = { bn, en };

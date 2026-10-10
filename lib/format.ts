@@ -5,13 +5,16 @@ export function formatBdt(amount: number) {
 }
 
 export function formatDate(iso: string, locale: Locale = "bn") {
+  if (!iso) return "";
   const value = iso.length === 10 ? `${iso}T00:00:00` : iso;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return iso;
   return new Intl.DateTimeFormat(intlLocale(locale), {
     day: "numeric",
     month: "long",
     year: "numeric",
     timeZone: "Asia/Dhaka",
-  }).format(new Date(value));
+  }).format(date);
 }
 
 export function formatSize(bytes: number) {

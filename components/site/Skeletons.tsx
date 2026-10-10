@@ -102,6 +102,18 @@ export function TileGridSkeleton() {
   );
 }
 
+export function TextPageSkeleton() {
+  return (
+    <Shell>
+      <PageHeaderSkeleton />
+      <div className="mx-auto grid max-w-3xl gap-4 px-4 py-12">
+        <Lines count={4} />
+        <Lines count={3} className="mt-4" />
+      </div>
+    </Shell>
+  );
+}
+
 export function ArticleSkeleton() {
   return (
     <Shell className="mx-auto my-10 max-w-3xl rounded-2xl border border-line bg-paper px-6 py-10">

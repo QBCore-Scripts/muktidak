@@ -13,18 +13,23 @@ export function LoginForm() {
     setPending(true);
     setError("");
     const data = Object.fromEntries(new FormData(event.currentTarget).entries());
-    const res = await fetch("/api/auth", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const body = (await res.json().catch(() => ({}))) as { error?: string };
-    if (!res.ok) {
+    try {
+      const res = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setPending(false);
+        setError(body.error || "প্রবেশ হয়নি");
+        return;
+      }
+      window.location.href = "/admin";
+    } catch {
       setPending(false);
-      setError(body.error || "প্রবেশ হয়নি");
-      return;
+      setError("প্রবেশ হয়নি");
     }
-    window.location.href = "/admin";
   }
 
   return (

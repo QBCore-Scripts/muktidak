@@ -26,8 +26,11 @@ export function AdminShell({ email, logo = "", children }: { email: string; logo
   const current = links.find(([href]) => (href === "/admin" ? path === href : path.startsWith(href)))?.[1] ?? "অ্যাডমিন";
 
   async function logout() {
-    await fetch("/api/auth", { method: "DELETE" });
-    window.location.href = "/admin/login";
+    try {
+      await fetch("/api/auth", { method: "DELETE" });
+    } finally {
+      window.location.href = "/admin/login";
+    }
   }
 
   const nav = (

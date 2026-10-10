@@ -123,11 +123,16 @@ export async function DELETE(request: Request, ctx: Ctx) {
   const denied = await gate(request);
   if (denied) return denied;
   const resource = (await ctx.params).resource;
-  if (!isList(resource) || resource === "pages") {
+  if (!isList(resource)) {
     return Response.json({ error: "মুছে ফেলা যায় না" }, { status: 400 });
   }
   const id = new URL(request.url).searchParams.get("id") ?? "";
   if (!safeId(id)) return Response.json({ error: "আইডি নেই" }, { status: 400 });
+  if (resource === "pages") {
+    const page = (await readDb()).pages.find((item) => item.id === id);
+    if (!page) return Response.json({ error: "খুঁজে পাওয়া যায়নি" }, { status: 404 });
+    if (reservedPageSlugs.has(page.slug)) return Response.json({ error: "এই পাতা মুছে ফেলা যায় না" }, { status: 400 });
+  }
   const stored = resource === "media" ? (await mediaRecord(id))?.stored ?? "" : "";
   let removed = false;
   await updateDb((db) => {

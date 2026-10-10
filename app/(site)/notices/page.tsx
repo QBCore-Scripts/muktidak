@@ -2,6 +2,7 @@ import { NoticeRow } from "@/components/site/NoticeRow";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Reveal } from "@/components/site/Reveal";
 import { Card, CardContent } from "@/components/ui/card";
+import { englishNotice } from "@/lib/english";
 import { getPublishedNotices } from "@/lib/db";
 import { getSite, localizedMeta } from "@/lib/locale";
 
@@ -12,7 +13,7 @@ export function generateMetadata() {
 export default async function NoticesPage() {
   const { locale, t, settings } = await getSite();
   const copy = settings.copy;
-  const notices = await getPublishedNotices();
+  const notices = (await getPublishedNotices()).map((item) => (locale === "en" ? englishNotice(item) : item));
 
   return (
     <>

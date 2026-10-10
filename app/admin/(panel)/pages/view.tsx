@@ -56,41 +56,73 @@ export function PagesView({ pages: initialPages, activities: initialActivities }
     event.preventDefault();
     if (!page) return;
     const data = Object.fromEntries(new FormData(event.currentTarget).entries());
-    await adminFetch("/api/admin/pages", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: page.id, ...data }),
-    });
-    setSaved(true);
-    await load();
+    try {
+      await adminFetch("/api/admin/pages", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: page.id, ...data }),
+      });
+      setError("");
+      setSaved(true);
+      await load();
+    } catch (err) {
+      setSaved(false);
+      setError(err instanceof Error ? err.message : "সংরক্ষণ হয়নি");
+    }
+  }
+
+  async function removePage(id: string) {
+    try {
+      await adminFetch(`/api/admin/pages?id=${id}`, { method: "DELETE" });
+      setError("");
+      setCurrent("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "পাতা মুছা যায়নি");
+    }
   }
 
   async function addActivity(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    await adminFetch("/api/admin/activities", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(Object.fromEntries(new FormData(form).entries())),
-    });
-    form.reset();
-    await load();
+    try {
+      await adminFetch("/api/admin/activities", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(new FormData(form).entries())),
+      });
+      form.reset();
+      setError("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "কার্যক্রম যোগ হয়নি");
+    }
   }
 
   async function updateActivity(event: FormEvent<HTMLFormElement>, id: string) {
     event.preventDefault();
     const data = Object.fromEntries(new FormData(event.currentTarget).entries());
-    await adminFetch("/api/admin/activities", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, ...data }),
-    });
-    await load();
+    try {
+      await adminFetch("/api/admin/activities", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, ...data }),
+      });
+      setError("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "আপডেট হয়নি");
+    }
   }
 
   async function removeActivity(id: string) {
-    await adminFetch(`/api/admin/activities?id=${id}`, { method: "DELETE" });
-    await load();
+    try {
+      await adminFetch(`/api/admin/activities?id=${id}`, { method: "DELETE" });
+      setError("");
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "মুছা যায়নি");
+    }
   }
 
   return (
@@ -142,7 +174,12 @@ export function PagesView({ pages: initialPages, activities: initialActivities }
           <p className="text-xs text-muted">অনুচ্ছেদ আলাদা করতে এক লাইন ফাঁকা রাখুন।</p>
           {error ? <p className="text-sm text-donate">{error}</p> : null}
           {saved ? <p className="text-sm text-leaf">সংরক্ষিত।</p> : null}
-          <button className="justify-self-start rounded-lg bg-forest px-4 py-2.5 text-sm font-semibold text-paper">সংরক্ষণ</button>
+          <div className="flex gap-3">
+            <button className="rounded-lg bg-forest px-4 py-2.5 text-sm font-semibold text-paper">সংরক্ষণ</button>
+            {pageNames[page.slug] ? null : (
+              <button type="button" className="text-sm text-donate" onClick={() => removePage(page.id)}>মুছুন</button>
+            )}
+          </div>
         </form>
       ) : null}
       <section className="mt-8">

@@ -29,6 +29,10 @@ const groups: { title: string; fields: CopyField[] }[] = [
     fields: [
       ["headerLine", "হেডারের লাইন"],
       ["footerLine", "ফুটারের লাইন"],
+      ["footerAlt", "ফুটারে নামের নিচের লাইন"],
+      ["footerPagesTitle", "ফুটার — পাতার শিরোনাম"],
+      ["footerContactTitle", "ফুটার — যোগাযোগের শিরোনাম"],
+      ["footerLinks", "ফুটার লিংক — প্রতি লাইনে নাম | /পথ। খালি রাখলে মেনু থেকে আসে। লুকাতে: লুকান | /পথ", true],
       ["footerNote", "ফুটার নোট"],
       ["flavorLine", "পাতার ছোট লাইন"],
     ],
@@ -36,9 +40,13 @@ const groups: { title: string; fields: CopyField[] }[] = [
   {
     title: "প্রচ্ছদের ওপরের অংশ",
     fields: [
+      ["homeDate", "প্রচ্ছদের ছোট লাইন"],
       ["heroTitle", "বড় শিরোনাম", true],
       ["heroPhilosophy", "সবুজ লাইন"],
+      ["homeFreedom", "প্রচ্ছদের ব্যাখ্যা", true],
       ["heroPillars", "চার মূলনীতি — প্রতি লাইনে একটি", true],
+      ["homeDonate", "প্রচ্ছদের দান বোতাম"],
+      ["homeAbout", "প্রচ্ছদের পরিচিতি বোতাম"],
       ["linkManifesto", "কার্ড: ঘোষণাপত্র"],
       ["linkObjectives", "কার্ড: লক্ষ্য এবং উদ্দেশ্য"],
       ["linkCommittee", "কার্ড: কেন্দ্রীয় কার্যনির্বাহী সংসদ"],
@@ -82,6 +90,7 @@ const groups: { title: string; fields: CopyField[] }[] = [
       ["contactKicker", "যোগাযোগ — ছোট শিরোনাম"],
       ["contactTitle", "যোগাযোগ — শিরোনাম"],
       ["contactOffice", "দপ্তরের শিরোনাম"],
+      ["quoteLabel", "পরিচিতির উক্তির ছোট শিরোনাম"],
       ["visionKicker", "ভিশন — ছোট শিরোনাম"],
       ["activitiesKicker", "কার্যক্রম — ছোট শিরোনাম"],
       ["visionPoints", "ভিশনের বক্স (শিরোনাম, পরের লাইনে বিবরণ, মাঝে ফাঁকা লাইন)", true],
@@ -193,7 +202,7 @@ export function SettingsView({ initial, email }: { initial: Settings; email: str
             <label key={key} className="grid gap-1 text-sm font-medium">
               {label}
               {long ? (
-                <textarea className="field" rows={key === "visionPoints" ? 8 : 3} value={current.copy[key]} onChange={(e) => setCopy(key, e.target.value)} />
+                <textarea className="field" rows={key === "visionPoints" || key === "footerLinks" ? 8 : 3} value={current.copy[key]} onChange={(e) => setCopy(key, e.target.value)} />
               ) : (
                 <input className="field" value={current.copy[key]} onChange={(e) => setCopy(key, e.target.value)} />
               )}
