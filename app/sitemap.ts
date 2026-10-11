@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getPages, getPublishedBlogs, getPublishedNotices } from "@/lib/db";
+import { getPages, getPublishedBlogs, getPublishedNotices, getPublishedPosts } from "@/lib/db";
 import { siteUrl } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +23,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.5,
     }));
+  const posts = (await getPublishedPosts()).map((post) => ({
+    url: `${origin}/posts/${post.id}`,
+    lastModified: now,
+    changeFrequency: "weekly" as const,
+    priority: 0.6,
+  }));
   const blogs = (await getPublishedBlogs()).map((post) => ({
     url: `${origin}/blogs/${post.slug}`,
     lastModified: now,
@@ -38,6 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
     ...extra,
     ...notices,
+    ...posts,
     ...blogs,
   ];
 }

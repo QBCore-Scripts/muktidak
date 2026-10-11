@@ -15,6 +15,7 @@ const reserved = new Set([
   "activities",
   "gallery",
   "notices",
+  "posts",
   "blogs",
   "districts",
   "contact",

@@ -4,7 +4,7 @@ import { mergeCopy } from "@/lib/copy";
 import { dashboardFrom } from "@/lib/admin-snapshot";
 import { todayISO } from "@/lib/format";
 import { assertGlobal, assertRate, assertSameOrigin, plain, readJson } from "@/lib/guard";
-import type { ListKey } from "@/lib/types";
+import { postSections, type ListKey } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const lists = [
@@ -12,6 +12,7 @@ const lists = [
   "donations",
   "accounts",
   "notices",
+  "posts",
   "blogs",
   "pages",
   "media",
@@ -25,6 +26,7 @@ const fields: Record<ListKey, string[]> = {
   donations: ["donor", "phone", "amount", "method", "purpose", "date", "status"],
   accounts: ["bank", "branch", "accountName", "accountNumber", "accountType", "visible"],
   notices: ["title", "body", "date", "published"],
+  posts: ["section", "title", "body", "cover", "date", "published"],
   blogs: ["slug", "title", "excerpt", "body", "cover", "author", "category", "date", "published"],
   pages: ["slug", "title", "body"],
   media: ["name", "folder", "private"],
@@ -199,6 +201,10 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
   if (resource === "accounts" && creating && !str(data.bank)) return "ব্যাংকের নাম লিখুন";
   if (resource === "accounts" && creating && !str(data.accountNumber)) return "অ্যাকাউন্ট নম্বর লিখুন";
   if (resource === "notices" && creating && !str(data.title)) return "শিরোনাম লিখুন";
+  if (resource === "posts" && (creating || "section" in data) && !postSections.includes(str(data.section) as (typeof postSections)[number])) {
+    return "বিভাগ সঠিক নয়";
+  }
+  if (resource === "posts" && (creating || "title" in data) && !str(data.title)) return "শিরোনাম লিখুন";
   if (resource === "blogs" && "title" in data && !str(data.title)) return "শিরোনাম লিখুন";
   if (resource === "pages" && !str(data.title)) return "শিরোনাম লিখুন";
   if (resource === "districts" && creating && !str(data.name)) return "জেলার নাম লিখুন";
@@ -210,7 +216,7 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
   }
   for (const key of Object.keys(data)) {
     if (typeof data[key] === "string") {
-      const max = key === "body" && resource === "blogs" ? 20000 : key === "excerpt" ? 600 : key === "body" ? 5000 : 240;
+      const max = key === "body" && (resource === "blogs" || resource === "posts") ? 20000 : key === "title" && resource === "posts" ? 600 : key === "excerpt" ? 600 : key === "body" ? 5000 : 240;
       data[key] = str(data[key], max);
     }
   }
@@ -219,8 +225,8 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
     if (!slug) return "স্লাগ সঠিক নয় — শুধু ইংরেজি ছোট হাতের অক্ষর, সংখ্যা ও হাইফেন";
     data.slug = slug;
   }
-  if (resource === "blogs" && data.cover && !isLocalPath(String(data.cover))) {
-    return "কভার ছবির ঠিকানা সাইটের ভিতরের হতে হবে";
+  if ((resource === "blogs" || resource === "posts") && data.cover && !isLocalPath(String(data.cover))) {
+    return "ছবির ঠিকানা সাইটের ভিতরের হতে হবে";
   }
   return "";
 }
@@ -232,6 +238,7 @@ const reservedPageSlugs = new Set([
   "activities",
   "gallery",
   "notices",
+  "posts",
   "blogs",
   "districts",
   "contact",
@@ -266,6 +273,7 @@ function defaults(resource: ListKey) {
   if (resource === "donations") return { status: "received", date, method: "ব্যাংক", phone: "" };
   if (resource === "accounts") return { visible: true, accountType: "সঞ্চয়ী", accountName: "" };
   if (resource === "notices") return { published: true, date, body: "" };
+  if (resource === "posts") return { published: true, date, body: "", cover: "", section: "manifesto" };
   if (resource === "blogs") return { published: false, date, excerpt: "", body: "", cover: "", author: "", category: "", slug: "" };
   if (resource === "districts") return { members: 0, phone: "", office: "", contact: "" };
   if (resource === "activities") return { date: "", summary: "" };

@@ -58,6 +58,19 @@ export type Notice = {
   published: boolean;
 };
 
+export const postSections = ["manifesto", "objectives", "committee"] as const;
+export type PostSection = (typeof postSections)[number];
+
+export type Post = {
+  id: string;
+  section: PostSection;
+  title: string;
+  body: string;
+  cover: string;
+  date: string;
+  published: boolean;
+};
+
 export type BlogPost = {
   id: string;
   slug: string;
@@ -121,6 +134,7 @@ export type Database = {
   donations: Donation[];
   accounts: BankAccount[];
   notices: Notice[];
+  posts: Post[];
   blogs: BlogPost[];
   pages: PageContent[];
   media: MediaItem[];
@@ -134,6 +148,7 @@ export type ListKey =
   | "donations"
   | "accounts"
   | "notices"
+  | "posts"
   | "blogs"
   | "pages"
   | "media"

@@ -15,6 +15,7 @@ import type {
   MediaItem,
   Notice,
   PageContent,
+  Post,
   Settings,
 } from "./types";
 
@@ -30,6 +31,7 @@ const LIST_KEYS: ListKey[] = [
   "donations",
   "accounts",
   "notices",
+  "posts",
   "blogs",
   "pages",
   "media",
@@ -190,6 +192,19 @@ export async function getActivities(): Promise<Activity[]> {
 
 export async function getPublishedNotices(): Promise<Notice[]> {
   return ((await loadState({ notices: 1 })).notices ?? []).filter((item) => item.published);
+}
+
+export async function getPublishedPosts(): Promise<Post[]> {
+  const items = ((await loadState({ posts: 1 })).posts ?? []).filter((item) => item.published);
+  return items
+    .map((item, index) => ({ item, index }))
+    .sort((a, b) => (b.item.date || "").localeCompare(a.item.date || "") || a.index - b.index)
+    .map(({ item }) => item);
+}
+
+export async function getPublishedPost(id: string): Promise<Post | null> {
+  if (!safeId(id)) return null;
+  return (await getPublishedPosts()).find((item) => item.id === id) ?? null;
 }
 
 export async function getPublishedBlogs(): Promise<BlogPost[]> {

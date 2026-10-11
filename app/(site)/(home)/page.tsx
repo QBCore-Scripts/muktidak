@@ -4,6 +4,7 @@ import { BlogCard } from "@/components/site/BlogCard";
 import { CountUp } from "@/components/site/CountUp";
 import { Mark } from "@/components/site/Mark";
 import { NoticeRow } from "@/components/site/NoticeRow";
+import { PostTeasers } from "@/components/site/PostTeasers";
 import { Reveal } from "@/components/site/Reveal";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -11,7 +12,7 @@ import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader,
 import { Separator } from "@/components/ui/separator";
 import { visionCards } from "@/lib/copy";
 import { pageBySlug, paragraphs } from "@/lib/content";
-import { getActivities, getPublishedBlogs, getPublishedNotices, publicCounts } from "@/lib/db";
+import { getActivities, getPublishedBlogs, getPublishedNotices, getPublishedPosts, publicCounts } from "@/lib/db";
 import { pad2 } from "@/lib/i18n";
 import { englishActivity, englishNotice, englishText } from "@/lib/english";
 import { getSite } from "@/lib/locale";
@@ -24,7 +25,7 @@ const tiles = [
 ];
 
 const highlightArt = [
-  { src: "/history/victory.jpg", tint: "tile-red", top: false },
+  { src: "/history/press.jpg", tint: "tile-red", top: false },
   { src: "/history/fighters.jpg", tint: "tile-green", top: true },
   { src: "/history/speech.jpg", tint: "tile-blue", top: false },
 ];
@@ -41,10 +42,11 @@ export default async function HomePage() {
   const body = paragraphs(home.body);
   const pillars = copy.heroPillars.split(/\n/).map((item) => item.trim()).filter(Boolean);
   const heroVideo = /^[\w-]{6,20}$/.test(copy.heroVideo) ? copy.heroVideo : "Wh0q8vdH-ro";
+  const cardPosts = await getPublishedPosts();
   const sections = [
-    { href: "/manifesto", label: copy.linkManifesto },
-    { href: "/objectives", label: copy.linkObjectives },
-    { href: "/committee", label: copy.linkCommittee },
+    { href: "/manifesto", section: "manifesto" as const, label: copy.linkManifesto },
+    { href: "/objectives", section: "objectives" as const, label: copy.linkObjectives },
+    { href: "/committee", section: "committee" as const, label: copy.linkCommittee },
   ];
   const spotlight = [
     { href: "/vision", kicker: copy.highlightKicker, title: copy.highlightOne },
@@ -110,17 +112,34 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <nav aria-label={copy.navHome} className="relative z-10 mx-auto -mt-16 grid max-w-6xl gap-3 px-4 sm:grid-cols-3">
-        {sections.map((item, index) => (
-          <Reveal key={item.href} index={index}>
-            <Link
-              href={item.href}
-              className="lift flex min-h-28 items-center justify-center rounded-2xl bg-white px-5 py-6 text-center shadow-[0_24px_50px_-24px_rgba(12,50,40,0.45)] ring-1 ring-forest/8 hover:ring-leaf/40"
-            >
-              <span className="font-heading text-2xl leading-snug text-forest md:text-3xl">{item.label}</span>
-            </Link>
-          </Reveal>
-        ))}
+      <nav aria-label={copy.navHome} className="relative z-10 mx-auto -mt-16 grid max-w-6xl items-stretch gap-3 px-4 sm:grid-cols-3">
+        {sections.map((item, index) => {
+          const latest = cardPosts.filter((post) => post.section === item.section).slice(0, 3);
+          return (
+            <Reveal key={item.href} index={index} className="h-full">
+              {latest.length === 0 ? (
+                <Link
+                  href={item.href}
+                  className="lift flex h-full min-h-28 items-center justify-center rounded-2xl bg-white px-5 py-6 text-center shadow-[0_24px_50px_-24px_rgba(12,50,40,0.45)] ring-1 ring-forest/8 hover:ring-leaf/40"
+                >
+                  <span className="font-heading text-2xl leading-snug text-forest md:text-3xl">{item.label}</span>
+                </Link>
+              ) : (
+                <div className="lift flex h-full min-h-28 flex-col rounded-2xl bg-white px-5 py-6 text-center shadow-[0_24px_50px_-24px_rgba(12,50,40,0.45)] ring-1 ring-forest/8">
+                  <Link
+                    href={item.href}
+                    className="font-heading text-2xl leading-snug text-forest hover:text-leaf focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 md:text-3xl"
+                  >
+                    {item.label}
+                  </Link>
+                  <div className="mt-5 border-t border-forest/10 pt-4 text-left">
+                    <PostTeasers posts={latest} readMore={t.readMore} />
+                  </div>
+                </div>
+              )}
+            </Reveal>
+          );
+        })}
       </nav>
 
       <section aria-label={copy.highlightOne} className="mx-auto grid max-w-6xl gap-5 px-4 pt-10 sm:grid-cols-3">
