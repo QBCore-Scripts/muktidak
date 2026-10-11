@@ -456,6 +456,71 @@ h6,
   background: linear-gradient(0deg, transparent 38%, var(--tint) 100%);
 }
 
+.tile-statement {
+  aspect-ratio: 4 / 5;
+}
+
+.tile-statement img {
+  object-position: center 36%;
+}
+
+.tile-statement::after {
+  background: linear-gradient(180deg, transparent 28%, color-mix(in srgb, var(--forest-deep) 92%, transparent) 78%);
+}
+
+@media (min-width: 640px) {
+  .tile-statement {
+    aspect-ratio: 2 / 1;
+  }
+}
+
+.char-dofa-photo {
+  animation: kenburns 28s ease-in-out infinite alternate;
+  transform-origin: 60% 30%;
+}
+
+.char-dofa-rule {
+  transform-origin: left center;
+}
+
+.char-dofa-num {
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--donate) 0%, transparent);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .char-dofa-rule {
+    animation: char-dofa-draw 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+  }
+
+  .char-dofa-point {
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s ease;
+  }
+
+  [data-in] .char-dofa-num {
+    animation: char-dofa-pulse 1.4s ease 0.15s 1;
+  }
+}
+
+@keyframes char-dofa-draw {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes char-dofa-pulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--donate) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 12px color-mix(in srgb, var(--donate) 0%, transparent);
+  }
+}
+
 .doc-row {
   transition:
     transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),

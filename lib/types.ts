@@ -127,6 +127,28 @@ export type Message = {
   read: boolean;
 };
 
+export const campaignSpots = ["banner", "highlight"] as const;
+export type CampaignSpot = (typeof campaignSpots)[number];
+
+export type CampaignImage = {
+  url: string;
+  alt: string;
+};
+
+export type Campaign = {
+  id: string;
+  spot: CampaignSpot;
+  slug: string;
+  title: string;
+  intro: string;
+  lead: string;
+  place: string;
+  host: string;
+  demands: string;
+  images: CampaignImage[];
+  published: boolean;
+};
+
 export type Database = {
   settings: Settings;
   admin: AdminAuth;
@@ -141,6 +163,7 @@ export type Database = {
   districts: District[];
   activities: Activity[];
   messages: Message[];
+  campaigns: Campaign[];
 };
 
 export type ListKey =
@@ -154,4 +177,5 @@ export type ListKey =
   | "media"
   | "districts"
   | "activities"
-  | "messages";
+  | "messages"
+  | "campaigns";

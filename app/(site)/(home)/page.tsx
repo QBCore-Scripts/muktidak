@@ -1,7 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { BlogCard } from "@/components/site/BlogCard";
+import { CampaignBanner, CampaignCard } from "@/components/site/ObosthanSlides";
 import { CountUp } from "@/components/site/CountUp";
+import { LiveMembers } from "@/components/site/LiveMembers";
 import { Mark } from "@/components/site/Mark";
 import { NoticeRow } from "@/components/site/NoticeRow";
 import { PostTeasers } from "@/components/site/PostTeasers";
@@ -10,13 +12,16 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { campaignPath } from "@/lib/campaigns";
 import { visionCards } from "@/lib/copy";
 import { pageBySlug, paragraphs } from "@/lib/content";
-import { getActivities, getPublishedBlogs, getPublishedNotices, getPublishedPosts, publicCounts } from "@/lib/db";
+import { getActivities, getCampaigns, getPublishedBlogs, getPublishedNotices, getPublishedPosts, publicCounts } from "@/lib/db";
 import { pad2 } from "@/lib/i18n";
 import { englishActivity, englishNotice, englishText } from "@/lib/english";
 import { getSite } from "@/lib/locale";
 import { cn } from "@/lib/utils";
+
+export const dynamic = "force-dynamic";
 
 const tiles = [
   { src: "/history/speech.jpg", tint: "tile-blue", top: false },
@@ -38,7 +43,12 @@ export default async function HomePage() {
   const home = await pageBySlug("home");
   const notices = (await getPublishedNotices()).slice(0, 5).map((item) => (locale === "en" ? englishNotice(item) : item));
   const blogs = (await getPublishedBlogs()).slice(0, 3).map((item) => (locale === "en" ? { ...item, category: englishText(item.category) } : item));
-  const points = visionCards(copy.visionPoints).slice(0, 3);
+  const campaigns = (await getCampaigns()).filter((item) => item.published);
+  const banners = campaigns.filter((item) => item.spot === "banner");
+  const highlight = campaigns.find((item) => item.spot === "highlight");
+  const points = visionCards(copy.visionPoints)
+    .slice(0, 3)
+    .filter((point) => banners.length === 0 || point.title !== "গণতন্ত্রের মাঠের রাজনীতি");
   const body = paragraphs(home.body);
   const pillars = copy.heroPillars.split(/\n/).map((item) => item.trim()).filter(Boolean);
   const heroVideo = /^[\w-]{6,20}$/.test(copy.heroVideo) ? copy.heroVideo : "Wh0q8vdH-ro";
@@ -54,9 +64,9 @@ export default async function HomePage() {
     { href: "/objectives", kicker: "", title: copy.highlightThree },
   ];
   const stats = [
-    { href: "/donate", value: counts.donationTotal, prefix: "৳", label: t.statDonations },
-    { href: "", value: counts.activeMembers, prefix: "", label: t.statMembers },
-    { href: "/districts", value: counts.districtCount, prefix: "", label: t.statDistricts },
+    { href: "/donate", value: counts.donationTotal, prefix: "৳", label: t.statDonations, live: false },
+    { href: "", value: counts.activeMembers, prefix: "", label: t.statMembers, live: true },
+    { href: "/districts", value: counts.districtCount, prefix: "", label: t.statDistricts, live: false },
   ];
 
   return (
@@ -142,8 +152,15 @@ export default async function HomePage() {
         })}
       </nav>
 
-      <section aria-label={copy.highlightOne} className="mx-auto grid max-w-6xl gap-5 px-4 pt-10 sm:grid-cols-3">
+      <section aria-label={copy.highlightOne} className="mx-auto grid max-w-6xl items-start gap-5 px-4 pt-10 sm:grid-cols-3">
         {spotlight.map((item, index) => {
+          if (index === 2 && highlight) {
+            return (
+              <Reveal key={highlight.id} variant="zoom" index={index}>
+                <CampaignCard title={highlight.title} href={campaignPath(highlight.slug)} images={highlight.images} />
+              </Reveal>
+            );
+          }
           const art = highlightArt[index];
           return (
           <Reveal key={item.href} variant="zoom" index={index}>
@@ -161,7 +178,7 @@ export default async function HomePage() {
 
       <section className="relative z-10 mx-auto mt-8 max-w-6xl px-4">
         <Reveal className="grid gap-3 sm:grid-cols-3">
-          {stats.map(({ href, value, prefix, label }, index) => {
+          {stats.map(({ href, value, prefix, label, live }, index) => {
             const card = (
               <Card
                 className={cn(
@@ -170,9 +187,21 @@ export default async function HomePage() {
                   href && "h-full",
                 )}
               >
-                <p className={cn("text-sm", index === 0 ? "text-white/80" : "text-muted-foreground")}>{label}</p>
+                <p className={cn("inline-flex items-center gap-2 text-sm", index === 0 ? "text-white/80" : "text-muted-foreground")}>
+                  {live ? (
+                    <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-leaf opacity-70 motion-reduce:animate-none" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-leaf" />
+                    </span>
+                  ) : null}
+                  {label}
+                </p>
                 <p className={cn("text-4xl font-semibold", index === 0 ? "text-white" : "text-forest")}>
-                  <CountUp value={value} prefix={prefix} locale={locale} />
+                  {live ? (
+                    <LiveMembers value={value} nextAt={counts.membersNextAt} locale={locale} />
+                  ) : (
+                    <CountUp value={value} prefix={prefix} locale={locale} />
+                  )}
                 </p>
               </Card>
             );
@@ -187,22 +216,31 @@ export default async function HomePage() {
         </Reveal>
       </section>
 
-      {points.length > 0 ? (
-        <section className="mx-auto grid max-w-6xl gap-5 px-4 pt-14 sm:grid-cols-3">
-          {points.map((point, index) => {
-            const tile = tiles[index % tiles.length];
-            return (
-              <Reveal key={point.title} variant="zoom" index={index}>
-                <Link href="/vision" className={`tile lift group flex p-6 ${tile.tint} ${tile.top ? "tile-top items-start" : "items-end"}`}>
-                  <Image src={tile.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" />
-                  <span className="font-heading w-full text-center text-2xl leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.35)] md:text-3xl">
-                    {point.title}
-                  </span>
-                </Link>
-              </Reveal>
-            );
-          })}
-        </section>
+      {banners.length > 0 || points.length > 0 ? (
+      <section className="mx-auto grid max-w-6xl gap-5 px-4 pt-14" aria-label={banners[0]?.title || copy.navVision}>
+        {banners.map((item) => (
+          <Reveal key={item.id} variant="zoom">
+            <CampaignBanner title={item.title} href={campaignPath(item.slug)} images={item.images} />
+          </Reveal>
+        ))}
+        {points.length > 0 ? (
+          <div className={`grid gap-5 ${banners.length > 0 ? "sm:grid-cols-2" : "sm:grid-cols-3"}`}>
+            {points.map((point, index) => {
+              const tile = tiles[(banners.length > 0 ? index + 1 : index) % tiles.length];
+              return (
+                <Reveal key={point.title} variant="zoom" index={index + 1}>
+                  <Link href="/vision" className={`tile lift group flex p-6 ${tile.tint} ${tile.top ? "tile-top items-start" : "items-end"}`}>
+                    <Image src={tile.src} alt="" fill sizes="(min-width: 640px) 33vw, 100vw" />
+                    <span className="font-heading w-full text-center text-2xl leading-snug [text-shadow:0_2px_12px_rgba(0,0,0,0.35)] md:text-3xl">
+                      {point.title}
+                    </span>
+                  </Link>
+                </Reveal>
+              );
+            })}
+          </div>
+        ) : null}
+      </section>
       ) : null}
 
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.05fr_.95fr]">

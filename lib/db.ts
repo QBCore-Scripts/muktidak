@@ -2,13 +2,16 @@ import { randomUUID } from "crypto";
 import { readFileSync } from "fs";
 import path from "path";
 import mongoose from "mongoose";
+import { defaultCampaigns } from "./campaigns";
 import { mergeCopy } from "./copy";
+import { liveActiveMembers } from "./live-members";
 import connectToDatabase from "./mongodb";
 import type {
   Activity,
   AdminAuth,
   BankAccount,
   BlogPost,
+  Campaign,
   Database,
   District,
   ListKey,
@@ -38,6 +41,7 @@ const LIST_KEYS: ListKey[] = [
   "districts",
   "activities",
   "messages",
+  "campaigns",
 ];
 
 type StateDoc = Partial<Database> & { _id: string; rev?: number };
@@ -124,6 +128,11 @@ async function loadState(projection?: Record<string, 1>): Promise<StateDoc> {
     doc = await AppState.findById(STATE_ID, projection).lean<StateDoc>();
   }
   if (!doc) throw new Error("ডেটাবেস খালি");
+  if ((!projection || projection.campaigns) && !Array.isArray(doc.campaigns)) {
+    const campaigns = defaultCampaigns();
+    await AppState.updateOne({ _id: STATE_ID, campaigns: { $exists: false } }, { $set: { campaigns } });
+    doc.campaigns = campaigns;
+  }
   return doc;
 }
 
@@ -244,14 +253,24 @@ export async function getPage(slug: string): Promise<PageContent | null> {
   return ((await loadState({ pages: 1 })).pages ?? []).find((item) => item.slug === slug) ?? null;
 }
 
+export async function getCampaigns(): Promise<Campaign[]> {
+  return (await loadState({ campaigns: 1 })).campaigns ?? [];
+}
+
+export async function getCampaignBySlug(slug: string): Promise<Campaign | null> {
+  if (!/^[a-z0-9-]{1,40}$/.test(slug)) return null;
+  return (await getCampaigns()).find((item) => item.slug === slug) ?? null;
+}
+
 export async function publicCounts() {
-  const doc = await loadState({ donations: 1, members: 1, districts: 1 });
+  const [doc, live] = await Promise.all([loadState({ donations: 1, districts: 1 }), liveActiveMembers()]);
   const donationTotal = (doc.donations ?? [])
     .filter((item) => item.status === "received")
     .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
   return {
     donationTotal,
-    activeMembers: (doc.members ?? []).filter((item) => item.status === "active").length,
+    activeMembers: live.count,
+    membersNextAt: live.nextAt,
     districtCount: (doc.districts ?? []).length,
   };
 }

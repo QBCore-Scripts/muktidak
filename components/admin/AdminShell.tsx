@@ -13,6 +13,7 @@ const links = [
   ["/admin/accounts", "অ্যাকাউন্ট"],
   ["/admin/notices", "নোটিশ"],
   ["/admin/posts", "পোস্ট"],
+  ["/admin/campaigns", "কর্মসূচি"],
   ["/admin/blogs", "ব্লগ"],
   ["/admin/pages", "পেজ"],
   ["/admin/media", "গ্যালারি"],

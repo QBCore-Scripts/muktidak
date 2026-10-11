@@ -76,7 +76,7 @@ export function defaultCopy(): SiteCopy {
     homeDate: "গণতন্ত্র পুনরুদ্ধারের লড়াই",
     homeFreedom: "মানুষের মর্যাদা, ভোটের অধিকার ও নিরাপদ জীবনের পক্ষে আমাদের রাজনীতি।",
     quoteLabel: "দলের কথা",
-    homeDonate: "দান করুন",
+    homeDonate: "অনুদান",
     homeAbout: "পরিচিতি পড়ুন",
     homeWorkTitle: "মাঠের কর্মসূচি",
     homeNoticeTitle: "নোটিশ",
@@ -91,7 +91,7 @@ export function defaultCopy(): SiteCopy {
     navBlogs: "ব্লগ",
     navDistricts: "জেলা",
     navContact: "যোগাযোগ",
-    navDonate: "দান করুন",
+    navDonate: "অনুদান",
     donateKicker: "দলের গণতান্ত্রিক কাজে",
     donateTitle: "সহযোগিতা ও সংহতি",
     donateText:

@@ -4,7 +4,7 @@ import { mergeCopy } from "@/lib/copy";
 import { dashboardFrom } from "@/lib/admin-snapshot";
 import { todayISO } from "@/lib/format";
 import { assertGlobal, assertRate, assertSameOrigin, plain, readJson } from "@/lib/guard";
-import { postSections, type ListKey } from "@/lib/types";
+import { postSections, campaignSpots, type ListKey } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const lists = [
@@ -19,6 +19,7 @@ const lists = [
   "districts",
   "activities",
   "messages",
+  "campaigns",
 ] as const;
 
 const fields: Record<ListKey, string[]> = {
@@ -33,6 +34,7 @@ const fields: Record<ListKey, string[]> = {
   districts: ["name", "office", "contact", "phone", "members"],
   activities: ["title", "summary", "date"],
   messages: ["read"],
+  campaigns: ["spot", "slug", "title", "intro", "lead", "place", "host", "demands", "images", "published"],
 };
 
 type Ctx = { params: Promise<{ resource: string }> };
@@ -75,6 +77,9 @@ export async function POST(request: Request, ctx: Ctx) {
   if (resource === "blogs" && await blogSlugTaken(String((item as { slug?: string }).slug))) {
     return Response.json({ error: "এই স্লাগ আগে ব্যবহার হয়েছে" }, { status: 400 });
   }
+  if (resource === "campaigns" && await campaignSlugTaken(String((item as { slug?: string }).slug))) {
+    return Response.json({ error: "এই লিংক আগে ব্যবহার হয়েছে" }, { status: 400 });
+  }
   if (resource === "pages") {
     const slug = String((item as { slug?: string }).slug);
     if (reservedPageSlugs.has(slug)) return Response.json({ error: "এই লিংক আগে থেকে সাইটে আছে। উপরের তালিকা থেকে সেই পাতা খুলুন।" }, { status: 400 });
@@ -106,6 +111,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
   if (error) return Response.json({ error }, { status: 400 });
   if (resource === "blogs" && typeof picked.slug === "string" && await blogSlugTaken(picked.slug, id)) {
     return Response.json({ error: "এই স্লাগ আগে ব্যবহার হয়েছে" }, { status: 400 });
+  }
+  if (resource === "campaigns" && typeof picked.slug === "string" && await campaignSlugTaken(picked.slug, id)) {
+    return Response.json({ error: "এই লিংক আগে ব্যবহার হয়েছে" }, { status: 400 });
   }
 
   let updated = false;
@@ -209,6 +217,21 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
   if (resource === "pages" && !str(data.title)) return "শিরোনাম লিখুন";
   if (resource === "districts" && creating && !str(data.name)) return "জেলার নাম লিখুন";
   if (resource === "activities" && creating && !str(data.title)) return "কার্যক্রমের নাম লিখুন";
+  if (resource === "campaigns") {
+    if ("spot" in data && !campaignSpots.includes(str(data.spot) as (typeof campaignSpots)[number])) return "জায়গা সঠিক নয়";
+    if ((creating || "title" in data) && !str(data.title, 600)) return "কার্ডের লেখা লিখুন";
+    if ("images" in data) {
+      const images = sanitizeImages(data.images);
+      if (!images) return "ছবির ঠিকানা সাইটের ভিতরের হতে হবে";
+      data.images = images;
+    }
+    if (creating || "slug" in data) {
+      const slug = blogSlug(str(data.slug, 40)) || (creating ? `kormosuchi-${newId().replace(/-/g, "").slice(0, 8)}` : "");
+      if (!slug) return "লিংক সঠিক নয় — শুধু ইংরেজি ছোট হাতের অক্ষর, সংখ্যা ও হাইফেন";
+      if (blockedSlugs.has(slug)) return "এই লিংক ব্যবহার করা যাবে না";
+      data.slug = slug;
+    }
+  }
   if ("members" in data && resource === "districts") {
     const count = Number(data.members);
     if (!Number.isFinite(count) || count < 0) return "সদস্য সংখ্যা সঠিক নয়";
@@ -216,7 +239,22 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
   }
   for (const key of Object.keys(data)) {
     if (typeof data[key] === "string") {
-      const max = key === "body" && (resource === "blogs" || resource === "posts") ? 20000 : key === "title" && resource === "posts" ? 600 : key === "excerpt" ? 600 : key === "body" ? 5000 : 240;
+      const max =
+        resource === "campaigns" && (key === "demands" || key === "intro" || key === "lead")
+          ? key === "demands"
+            ? 8000
+            : 2000
+          : resource === "campaigns" && key === "title"
+            ? 600
+            : key === "body" && (resource === "blogs" || resource === "posts")
+              ? 20000
+              : key === "title" && resource === "posts"
+                ? 600
+                : key === "excerpt"
+                  ? 600
+                  : key === "body"
+                    ? 5000
+                    : 240;
       data[key] = str(data[key], max);
     }
   }
@@ -246,6 +284,9 @@ const reservedPageSlugs = new Set([
   "manifesto",
   "objectives",
   "committee",
+  "char-dofa",
+  "obosthan",
+  "campaign",
   "admin",
   "api",
 ]);
@@ -263,6 +304,26 @@ function isLocalPath(value: string) {
   return value.startsWith("/") && !value.startsWith("//") && !value.includes("..") && /^\/[A-Za-z0-9._~/-]+$/.test(value);
 }
 
+const blockedSlugs = new Set([...reservedPageSlugs].filter((slug) => slug !== "char-dofa" && slug !== "obosthan"));
+
+function sanitizeImages(value: unknown) {
+  if (!Array.isArray(value)) return null;
+  const images: { url: string; alt: string }[] = [];
+  for (const item of value.slice(0, 8)) {
+    if (!item || typeof item !== "object") continue;
+    const url = str((item as { url?: unknown }).url, 300);
+    const alt = str((item as { alt?: unknown }).alt, 160);
+    if (!url) continue;
+    if (!isLocalPath(url)) return null;
+    images.push({ url, alt });
+  }
+  return images;
+}
+
+async function campaignSlugTaken(slug: string, exceptId = "") {
+  return (await readDb()).campaigns.some((item) => item.slug === slug && item.id !== exceptId);
+}
+
 async function blogSlugTaken(slug: string, exceptId = "") {
   return (await readDb()).blogs.some((item) => item.slug === slug && item.id !== exceptId);
 }
@@ -277,6 +338,9 @@ function defaults(resource: ListKey) {
   if (resource === "blogs") return { published: false, date, excerpt: "", body: "", cover: "", author: "", category: "", slug: "" };
   if (resource === "districts") return { members: 0, phone: "", office: "", contact: "" };
   if (resource === "activities") return { date: "", summary: "" };
+  if (resource === "campaigns") {
+    return { spot: "banner", slug: "", title: "", intro: "", lead: "", place: "", host: "", demands: "", images: [], published: true };
+  }
   return {};
 }
 

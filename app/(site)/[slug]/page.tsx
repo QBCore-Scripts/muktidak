@@ -23,6 +23,9 @@ const reserved = new Set([
   "manifesto",
   "objectives",
   "committee",
+  "char-dofa",
+  "obosthan",
+  "campaign",
   "admin",
   "api",
 ]);
