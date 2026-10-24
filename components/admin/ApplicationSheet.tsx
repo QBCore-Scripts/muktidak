@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { FormLeaders } from "@/components/site/FormLeaders";
 import { applicationCopy, applicationStatusLabel, memberLabel } from "@/lib/application";
 import { formatDate } from "@/lib/format";
 import type { Application } from "@/lib/types";
@@ -9,21 +10,14 @@ export function ApplicationSheet({ item, logo }: { item: Application; logo: stri
     <article className="relative mx-auto max-w-[820px] overflow-hidden bg-white px-4 py-6 text-[15px] leading-relaxed text-ink shadow-sm print:max-w-none print:px-0 print:py-0 print:shadow-none sm:px-8 sm:py-8">
       <Image src={logo || "/logo.png"} alt="" width={224} height={224} unoptimized className="pointer-events-none absolute top-1/2 left-1/2 w-56 -translate-x-1/2 -translate-y-1/2 opacity-[0.07]" />
       <div className="relative">
-        <div className="flex flex-col items-center gap-3 border-b-2 border-forest pb-4 print:flex-row print:items-center sm:flex-row sm:items-center">
-          <Image src={logo || "/logo.png"} alt="" width={72} height={72} unoptimized priority className="h-14 w-14 shrink-0 object-contain print:h-16 print:w-16 sm:h-16 sm:w-16" />
-          <div className="min-w-0 flex-1 text-center">
+        <FormLeaders className="px-0 pt-0 sm:px-0" />
+        <div className="mt-1 flex flex-col gap-4 border-b-2 border-forest pb-4 sm:flex-row sm:items-center">
+          <Image src={logo || "/logo.png"} alt="" width={72} height={72} unoptimized priority className="h-16 w-16 object-contain" />
+          <div className="min-w-0 flex-1">
             <p className="text-sm text-forest">{applicationCopy.org}</p>
             <h1 className="mt-1 bg-forest px-3 py-1.5 text-center font-heading text-lg leading-snug text-paper sm:text-xl">{applicationCopy.title}</h1>
           </div>
-          <Image
-            src="/form-leaders.png"
-            alt="নেতৃত্বের ছবি"
-            width={526}
-            height={526}
-            priority
-            className="order-first h-28 w-28 shrink-0 rounded-full object-cover print:order-none print:h-24 print:w-24 sm:order-none sm:h-32 sm:w-32"
-          />
-          <div className="mx-auto grid h-28 w-24 shrink-0 place-items-center overflow-hidden border border-forest/30 text-center text-xs text-muted print:mx-0 sm:mx-0">
+          <div className="mx-auto grid h-28 w-24 shrink-0 place-items-center overflow-hidden border border-forest/30 text-center text-xs text-muted sm:mx-0">
             {photo ? (
               <Image src={photo} alt="পদপ্রার্থীর ছবি" width={96} height={112} unoptimized priority className="h-full w-full object-cover" />
             ) : (
