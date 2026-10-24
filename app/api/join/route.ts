@@ -53,8 +53,8 @@ export async function POST(request: Request) {
   if (address.length < 8) return Response.json({ error: "স্থায়ী ঠিকানা লিখুন" }, { status: 400 });
   if (!newMember) return Response.json({ error: "নতুন সদস্য কি না বেছে নিন" }, { status: 400 });
   if (previousPost.length < 1) return Response.json({ error: "পূর্ববর্তী বা বর্তমান পদ লিখুন। না থাকলে «নেই» লিখুন" }, { status: 400 });
-  if (roleAfter.length < 8) return Response.json({ error: "আগস্ট ২০২৪-এর পর আপনার ভূমিকা লিখুন" }, { status: 400 });
-  if (cases.length < 1) return Response.json({ error: "মামলার সংখ্যা ও কারণ লিখুন। না থাকলে «নেই» লিখুন" }, { status: 400 });
+  if (roleAfter.length < 8) return Response.json({ error: "৫ই আগষ্ট ২০২৪-এর পর আপনার ভূমিকা লিখুন" }, { status: 400 });
+  if (cases.length < 1) return Response.json({ error: "মামলার সংখ্যা ও কারাবরণ লিখুন। না থাকলে «নেই» লিখুন" }, { status: 400 });
   if (mujibRole.length < 8) return Response.json({ error: "মুজিববাদ প্রতিষ্ঠার লড়াইয়ে আপনার ভূমিকা লিখুন" }, { status: 400 });
   if (signature.length < 2) return Response.json({ error: "আবেদনকারীর স্বাক্ষর লিখুন" }, { status: 400 });
   if (!pledged) return Response.json({ error: "অঙ্গীকারে সম্মতি দিন" }, { status: 400 });
