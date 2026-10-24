@@ -3,7 +3,7 @@ import { readFileSync } from "fs";
 import path from "path";
 import mongoose from "mongoose";
 import { defaultCampaigns } from "./campaigns";
-import { mergeCopy } from "./copy";
+import { mergeCopy, withJoinLabel } from "./copy";
 import { liveActiveMembers } from "./live-members";
 import connectToDatabase from "./mongodb";
 import type {
@@ -42,6 +42,7 @@ const LIST_KEYS: ListKey[] = [
   "activities",
   "messages",
   "campaigns",
+  "applications",
 ];
 
 type StateDoc = Partial<Database> & { _id: string; rev?: number };
@@ -192,7 +193,7 @@ export function withoutStored<T extends { stored?: string }>(item: T) {
 export async function getSettings(): Promise<Settings> {
   const { settings } = await loadState({ settings: 1 });
   if (!settings) throw new Error("সেটিংস নেই");
-  return { ...settings, logoUrl: settings.logoUrl || "", copy: mergeCopy(settings.copy) };
+  return { ...settings, logoUrl: settings.logoUrl || "", copy: withJoinLabel(mergeCopy(settings.copy)) };
 }
 
 export async function getActivities(): Promise<Activity[]> {

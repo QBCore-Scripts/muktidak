@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { adminFetch } from "@/lib/admin-api";
 import { formatBdt, formatDate } from "@/lib/format";
-import type { Donation, Message } from "@/lib/types";
+import { applicationStatusLabel } from "@/lib/application";
+import type { Application, Donation, Message } from "@/lib/types";
 
 type Dash = {
   members: number;
@@ -13,6 +14,8 @@ type Dash = {
   monthTotal: number;
   donations: Donation[];
   messages: Message[];
+  applications: Application[];
+  newApplications: number;
 };
 
 export function DashboardView({ initial }: { initial: Dash }) {
@@ -83,6 +86,27 @@ export function DashboardView({ initial }: { initial: Dash }) {
             </tbody>
           </table>
         </div>
+      </section>
+      <section className="mt-6 rounded-2xl border border-line bg-paper p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-semibold">আবেদন · নতুন {new Intl.NumberFormat("bn-BD").format(data.newApplications || 0)}</h2>
+          <Link href="/admin/applications" className="text-sm font-medium text-leaf">সব আবেদন</Link>
+        </div>
+        {(data.applications ?? []).length === 0 ? <p className="mt-3 text-sm text-muted">এখনো কোনো আবেদন নেই।</p> : null}
+        <ul className="mt-3 grid gap-3">
+          {(data.applications ?? []).map((item) => (
+            <li key={item.id} className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-line px-4 py-3 text-sm">
+              <div className="min-w-0">
+                <p className="font-medium">{item.nameBn} · {item.formNo}</p>
+                <p className="text-muted">{item.desiredPost} · {item.district}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted">{applicationStatusLabel[item.status] ?? ""}</span>
+                <Link href={`/admin/form/${item.id}`} className="text-sm font-medium text-leaf">ফরম</Link>
+              </div>
+            </li>
+          ))}
+        </ul>
       </section>
       <section className="mt-6 rounded-2xl border border-line bg-paper p-5">
         <div className="flex items-center justify-between gap-3">

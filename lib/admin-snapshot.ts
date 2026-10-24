@@ -12,6 +12,8 @@ export function dashboardFrom(db: Database) {
     monthTotal: received.filter((item) => item.date.startsWith(month)).reduce((sum, item) => sum + item.amount, 0),
     donations: db.donations.slice(0, 6),
     messages: db.messages.slice(0, 5),
+    applications: db.applications.slice(0, 5),
+    newApplications: db.applications.filter((item) => item.status === "new").length,
     formattedTotal: formatBdt(total),
   };
 }

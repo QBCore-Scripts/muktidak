@@ -127,6 +127,34 @@ export type Message = {
   read: boolean;
 };
 
+export const applicationStatuses = ["new", "review", "accepted", "rejected"] as const;
+export type ApplicationStatus = (typeof applicationStatuses)[number];
+
+export type Application = {
+  id: string;
+  formNo: string;
+  nameBn: string;
+  nameEn: string;
+  desiredPost: string;
+  nid: string;
+  education: string;
+  occupation: string;
+  mobile: string;
+  district: string;
+  upazila: string;
+  address: string;
+  newMember: "yes" | "no";
+  previousPost: string;
+  roleAfter: string;
+  cases: string;
+  mujibRole: string;
+  signature: string;
+  photoStored: string;
+  date: string;
+  status: ApplicationStatus;
+  note: string;
+};
+
 export const campaignSpots = ["banner", "highlight"] as const;
 export type CampaignSpot = (typeof campaignSpots)[number];
 
@@ -164,6 +192,7 @@ export type Database = {
   activities: Activity[];
   messages: Message[];
   campaigns: Campaign[];
+  applications: Application[];
 };
 
 export type ListKey =
@@ -178,4 +207,5 @@ export type ListKey =
   | "districts"
   | "activities"
   | "messages"
-  | "campaigns";
+  | "campaigns"
+  | "applications";

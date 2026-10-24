@@ -120,7 +120,7 @@ const en: UiText = {
 
 export const uiText: Record<Locale, UiText> = { bn, en };
 
-export type PageKey = "about" | "activities" | "blogs" | "committee" | "contact" | "districts" | "donate" | "gallery" | "manifesto" | "notices" | "objectives" | "vision";
+export type PageKey = "about" | "activities" | "blogs" | "committee" | "contact" | "districts" | "donate" | "gallery" | "join" | "manifesto" | "notices" | "objectives" | "vision";
 
 export const pageMeta: Record<Locale, Record<PageKey, { title: string; description: string }>> = {
   bn: {
@@ -147,6 +147,10 @@ export const pageMeta: Record<Locale, Record<PageKey, { title: string; descripti
     donate: {
       title: "দান",
       description: "বাংলাদেশ মুক্তির ডাক-৭১ (Bangladesh Muktir Dak 71) এর স্বচ্ছ ও খোলা দান হিসাব, যেখানে আপনার সহায়তা সরাসরি গণতান্ত্রিক রাজনীতি ও মাঠের কর্মসূচিতে যায়।",
+    },
+    join: {
+      title: "যোগ দিন",
+      description: "বাংলাদেশ মুক্তির ডাক-৭১ কেন্দ্রীয় কমিটিতে পদপ্রার্থী ও আগ্রহীদের অনলাইন আবেদন ফরম।",
     },
     gallery: {
       title: "গ্যালারি",
@@ -180,6 +184,7 @@ export const pageMeta: Record<Locale, Record<PageKey, { title: string; descripti
     contact: { title: "Contact", description: "Get in touch with Bangladesh Muktir Dak 71." },
     districts: { title: "Districts & offices", description: "District offices of Bangladesh Muktir Dak 71." },
     donate: { title: "Donate", description: "Open donation accounts of Bangladesh Muktir Dak 71." },
+    join: { title: "Join", description: "Apply to Bangladesh Muktir Dak 71 with the official central committee form." },
     gallery: { title: "Gallery", description: "Photos and documents from Bangladesh Muktir Dak 71." },
     committee: { title: "Central executive council", description: "The central executive council of Bangladesh Muktir Dak 71." },
     manifesto: { title: "Manifesto", description: "The manifesto of Bangladesh Muktir Dak 71." },

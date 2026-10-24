@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
 import type { Settings } from "@/lib/types";
 import { Mark } from "./Mark";
 
-const listed = new Set(["home", "manifesto", "objectives", "committee", "about", "vision", "activities", "gallery", "blogs", "notices", "districts", "contact", "donate"]);
+const listed = new Set(["home", "manifesto", "objectives", "committee", "about", "vision", "activities", "gallery", "blogs", "notices", "districts", "contact", "donate", "join"]);
 
 const linkClass = "text-paper/85 transition-colors hover:text-white";
 
@@ -29,7 +29,7 @@ export async function Footer({ settings, locale }: { settings: Settings; locale:
     { href: "/notices", label: settings.copy.navNotices },
     { href: "/districts", label: settings.copy.navDistricts },
     { href: "/contact", label: settings.copy.navContact },
-    { href: "/donate", label: settings.copy.navDonate },
+    { href: "/join", label: settings.copy.navDonate },
   ].filter((page) => page.label && !configured.hidden.has(page.href));
   const pages = [...(configured.links.length ? configured.links : builtin), ...extra];
   return (

@@ -9,6 +9,7 @@ import { siteNameEn } from "@/lib/seo";
 const links = [
   ["/admin", "ড্যাশবোর্ড"],
   ["/admin/members", "সদস্য"],
+  ["/admin/applications", "আবেদন"],
   ["/admin/donations", "দান"],
   ["/admin/accounts", "অ্যাকাউন্ট"],
   ["/admin/notices", "নোটিশ"],

@@ -38,6 +38,7 @@ const nextConfig: NextConfig = {
       { source: "/api/admin/:path*", headers: [{ key: "Cache-Control", value: "no-store" }] },
       { source: "/api/auth", headers: [{ key: "Cache-Control", value: "no-store" }] },
       { source: "/api/contact", headers: [{ key: "Cache-Control", value: "no-store" }] },
+      { source: "/api/join", headers: [{ key: "Cache-Control", value: "no-store" }] },
     ];
   },
 };

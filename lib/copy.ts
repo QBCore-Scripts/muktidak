@@ -76,7 +76,7 @@ export function defaultCopy(): SiteCopy {
     homeDate: "গণতন্ত্র পুনরুদ্ধারের লড়াই",
     homeFreedom: "মানুষের মর্যাদা, ভোটের অধিকার ও নিরাপদ জীবনের পক্ষে আমাদের রাজনীতি।",
     quoteLabel: "দলের কথা",
-    homeDonate: "অনুদান",
+    homeDonate: "যোগ দিন",
     homeAbout: "পরিচিতি পড়ুন",
     homeWorkTitle: "মাঠের কর্মসূচি",
     homeNoticeTitle: "নোটিশ",
@@ -91,7 +91,7 @@ export function defaultCopy(): SiteCopy {
     navBlogs: "ব্লগ",
     navDistricts: "জেলা",
     navContact: "যোগাযোগ",
-    navDonate: "অনুদান",
+    navDonate: "যোগ দিন",
     donateKicker: "দলের গণতান্ত্রিক কাজে",
     donateTitle: "সহযোগিতা ও সংহতি",
     donateText:
@@ -166,6 +166,14 @@ export function mergeCopy(value: unknown): SiteCopy {
       .slice(0, longKeys.has(key) ? 2000 : 240);
   }
   return out;
+}
+
+export function withJoinLabel(copy: SiteCopy): SiteCopy {
+  return {
+    ...copy,
+    navDonate: copy.navDonate === "অনুদান" ? "যোগ দিন" : copy.navDonate,
+    homeDonate: copy.homeDonate === "অনুদান" ? "যোগ দিন" : copy.homeDonate,
+  };
 }
 
 export function parseCopy(value: unknown): SiteCopy {

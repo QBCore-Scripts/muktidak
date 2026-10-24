@@ -137,7 +137,7 @@ export function CampaignsView({ initial, media: initialMedia }: { initial: Campa
             নতুন
           </button>
         </div>
-        <p className="mb-4 text-xs leading-relaxed text-muted">প্রচ্ছদের ব্যানার ও হাইলাইট স্লাইড এখান থেকে বদলানো, লুকানো বা মুছে ফেলা যায়। অনুদান বোতামের লেখা সেটিংসে আছে।</p>
+        <p className="mb-4 text-xs leading-relaxed text-muted">প্রচ্ছদের ব্যানার ও হাইলাইট স্লাইড এখান থেকে বদলানো, লুকানো বা মুছে ফেলা যায়। যোগ দিন বোতামের লেখা সেটিংসে আছে।</p>
         <ul className="grid gap-2">
           {rows.map((item) => (
             <li key={item.id}>

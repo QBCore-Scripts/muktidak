@@ -4,7 +4,7 @@ import { mergeCopy } from "@/lib/copy";
 import { dashboardFrom } from "@/lib/admin-snapshot";
 import { todayISO } from "@/lib/format";
 import { assertGlobal, assertRate, assertSameOrigin, plain, readJson } from "@/lib/guard";
-import { postSections, campaignSpots, type ListKey } from "@/lib/types";
+import { applicationStatuses, postSections, campaignSpots, type ListKey } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 
 const lists = [
@@ -20,6 +20,7 @@ const lists = [
   "activities",
   "messages",
   "campaigns",
+  "applications",
 ] as const;
 
 const fields: Record<ListKey, string[]> = {
@@ -35,6 +36,7 @@ const fields: Record<ListKey, string[]> = {
   activities: ["title", "summary", "date"],
   messages: ["read"],
   campaigns: ["spot", "slug", "title", "intro", "lead", "place", "host", "demands", "images", "published"],
+  applications: ["status", "note"],
 };
 
 type Ctx = { params: Promise<{ resource: string }> };
@@ -65,7 +67,7 @@ export async function POST(request: Request, ctx: Ctx) {
   if (denied) return denied;
   const resource = (await ctx.params).resource;
   if (resource === "media") return saveUpload(request);
-  if (!isList(resource) || resource === "messages") {
+  if (!isList(resource) || resource === "messages" || resource === "applications") {
     return Response.json({ error: "যোগ করা যায় না" }, { status: 400 });
   }
   const body = (await readJson(request, 100_000)) as Record<string, unknown> | null;
@@ -143,7 +145,12 @@ export async function DELETE(request: Request, ctx: Ctx) {
     if (!page) return Response.json({ error: "খুঁজে পাওয়া যায়নি" }, { status: 404 });
     if (reservedPageSlugs.has(page.slug)) return Response.json({ error: "এই পাতা মুছে ফেলা যায় না" }, { status: 400 });
   }
-  const stored = resource === "media" ? (await mediaRecord(id))?.stored ?? "" : "";
+  const stored =
+    resource === "media"
+      ? (await mediaRecord(id))?.stored ?? ""
+      : resource === "applications"
+        ? (await readDb()).applications.find((item) => item.id === id)?.photoStored ?? ""
+        : "";
   let removed = false;
   await updateDb((db) => {
     const list = db[resource] as { id: string }[];
@@ -196,6 +203,10 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
   if ("published" in data) data.published = data.published === true || data.published === "true";
   if ("private" in data) data.private = data.private === true || data.private === "true";
   if ("read" in data) data.read = data.read === true || data.read === "true";
+  if (resource === "applications" && "status" in data && !applicationStatuses.includes(str(data.status) as (typeof applicationStatuses)[number])) {
+    return "অবস্থা সঠিক নয়";
+  }
+  if (resource === "applications" && "note" in data) data.note = str(data.note, 1000);
   if (resource === "pages" && "slug" in data && !/^[a-z0-9-]{1,40}$/.test(str(data.slug))) return "স্লাগ সঠিক নয়";
   if (resource === "members" && creating && !str(data.name)) return "নাম লিখুন";
   if (resource === "donations") {
@@ -252,9 +263,11 @@ function validate(resource: ListKey, data: Record<string, unknown>, creating: bo
                 ? 600
                 : key === "excerpt"
                   ? 600
-                  : key === "body"
-                    ? 5000
-                    : 240;
+            : key === "body"
+              ? 5000
+              : resource === "applications" && key === "note"
+                ? 1000
+                : 240;
       data[key] = str(data[key], max);
     }
   }
@@ -281,6 +294,7 @@ const reservedPageSlugs = new Set([
   "districts",
   "contact",
   "donate",
+  "join",
   "manifesto",
   "objectives",
   "committee",

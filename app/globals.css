@@ -546,6 +546,16 @@ h6,
   }
 }
 
+@media print {
+  .nav-progress,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+  }
+}
+
 .nav-progress {
   position: fixed;
   inset: 0 0 auto;

@@ -106,7 +106,7 @@ export default async function HomePage() {
             </ul>
             {copy.homeFreedom ? <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-white/80">{copy.homeFreedom}</p> : null}
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/donate" className={cn(buttonVariants({ variant: "donate", size: "xl" }))}>
+              <Link href="/join" className={cn(buttonVariants({ variant: "donate", size: "xl" }))}>
                 {copy.homeDonate}
               </Link>
               <Link href="/about" className={cn(buttonVariants({ size: "xl" }), "border border-white/30 bg-white/10 text-white hover:bg-white/20")}>

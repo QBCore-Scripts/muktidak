@@ -20,6 +20,7 @@ const reserved = new Set([
   "districts",
   "contact",
   "donate",
+  "join",
   "manifesto",
   "objectives",
   "committee",

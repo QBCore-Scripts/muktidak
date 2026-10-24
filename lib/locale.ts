@@ -14,6 +14,7 @@ const pagePath: Record<PageKey, string> = {
   contact: "/contact",
   districts: "/districts",
   donate: "/donate",
+  join: "/join",
   gallery: "/gallery",
   manifesto: "/manifesto",
   notices: "/notices",

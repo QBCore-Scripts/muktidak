@@ -21,7 +21,7 @@ const groups: { title: string; fields: CopyField[] }[] = [
       ["navBlogs", "ব্লগ"],
       ["navDistricts", "জেলা"],
       ["navContact", "যোগাযোগ"],
-      ["navDonate", "অনুদান বোতাম (মেনু)"],
+      ["navDonate", "যোগ দিন বোতাম (মেনু)"],
     ],
   },
   {
@@ -45,7 +45,7 @@ const groups: { title: string; fields: CopyField[] }[] = [
       ["heroPhilosophy", "সবুজ লাইন"],
       ["homeFreedom", "প্রচ্ছদের ব্যাখ্যা", true],
       ["heroPillars", "চার মূলনীতি — প্রতি লাইনে একটি", true],
-      ["homeDonate", "প্রচ্ছদের অনুদান বোতাম"],
+      ["homeDonate", "প্রচ্ছদের যোগ দিন বোতাম"],
       ["homeAbout", "প্রচ্ছদের পরিচিতি বোতাম"],
       ["linkManifesto", "কার্ড: ঘোষণাপত্র"],
       ["linkObjectives", "কার্ড: লক্ষ্য এবং উদ্দেশ্য"],

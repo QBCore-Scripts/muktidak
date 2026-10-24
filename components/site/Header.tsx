@@ -73,7 +73,7 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
                 </Link>
               );
             })}
-            <Link href="/donate" className={cn(buttonVariants({ variant: "donate" }), "ml-1 whitespace-nowrap rounded-full px-3")}>
+            <Link href="/join" className={cn(buttonVariants({ variant: "donate" }), "ml-1 whitespace-nowrap rounded-full px-3")}>
               {copy.navDonate}
             </Link>
           </nav>
@@ -117,7 +117,7 @@ export function Header({ name, copy, t, locale, logo = "" }: { name: string; cop
                   {label}
                 </Link>
               ))}
-              <Link href="/donate" className={cn(buttonVariants({ variant: "donate", size: "xl" }), "mt-1 w-full")} onClick={() => setOpen(false)}>
+              <Link href="/join" className={cn(buttonVariants({ variant: "donate", size: "xl" }), "mt-1 w-full")} onClick={() => setOpen(false)}>
                 {copy.navDonate}
               </Link>
             </div>

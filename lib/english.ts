@@ -17,7 +17,7 @@ export const englishCopy: SiteCopy = {
   homeDate: "The struggle to restore democracy",
   homeFreedom: "Our politics stands for human dignity, the right to vote, and a safe life.",
   quoteLabel: "In the party's words",
-  homeDonate: "Support the party",
+  homeDonate: "Join",
   homeAbout: "Read our introduction",
   homeWorkTitle: "Field programmes",
   homeNoticeTitle: "Notices",
@@ -32,7 +32,7 @@ export const englishCopy: SiteCopy = {
   navBlogs: "Blog",
   navDistricts: "Districts",
   navContact: "Contact",
-  navDonate: "Support",
+  navDonate: "Join",
   donateKicker: "For the party's democratic work",
   donateTitle: "Support and solidarity",
   donateText:
