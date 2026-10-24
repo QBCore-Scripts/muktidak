@@ -68,11 +68,19 @@ export function JoinForm({ logo }: { logo: string }) {
   return (
     <section className="mx-auto max-w-3xl px-4 py-8 md:py-12">
         <form onSubmit={onSubmit} className="relative overflow-hidden rounded-3xl border border-line bg-paper shadow-[0_18px_50px_rgba(17,66,54,0.06)]">
-        <div className="flex items-center gap-4 bg-forest px-5 py-5 text-paper md:px-8">
-          <Image src={logo} alt="" width={56} height={56} unoptimized className="h-14 w-14 shrink-0 rounded-full bg-paper object-contain p-1" />
-          <div className="min-w-0">
-            <p className="text-sm text-paper/75">{applicationCopy.org}</p>
-            <h2 className="font-heading text-xl leading-snug md:text-2xl">{applicationCopy.title}</h2>
+        <div className="border-b border-line bg-white px-4 py-4 sm:px-6">
+          <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-3 sm:grid-cols-[4rem_minmax(0,1fr)_9rem] sm:gap-x-5">
+            <Image
+              src="/form-leaders.png"
+              alt="নেতৃত্বের ছবি"
+              width={526}
+              height={526}
+              priority
+              className="col-span-2 mx-auto h-32 w-32 rounded-full object-cover sm:col-span-1 sm:col-start-3 sm:row-span-2 sm:row-start-1 sm:mx-0 sm:h-36 sm:w-36 sm:justify-self-end"
+            />
+            <Image src={logo} alt="" width={64} height={64} unoptimized className="h-12 w-12 justify-self-end object-contain sm:col-start-1 sm:row-span-2 sm:row-start-1 sm:h-16 sm:w-16 sm:justify-self-center" />
+            <p className="text-sm font-medium leading-snug text-forest sm:col-start-2 sm:row-start-1 sm:text-center">{applicationCopy.org}</p>
+            <h2 className="col-span-2 bg-forest px-3 py-2 text-center font-heading text-lg leading-snug text-paper sm:col-span-1 sm:col-start-2 sm:row-start-2 sm:text-xl">{applicationCopy.title}</h2>
           </div>
         </div>
         <div className="grid gap-5 px-5 py-6 md:px-8">
